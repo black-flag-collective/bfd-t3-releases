@@ -3,7 +3,7 @@
 Signed and notarized builds of **BFD T3**, Black Flag Design's branded build of
 [T3 Code](https://github.com/pingdotgg/t3code), plus the update feed the app reads.
 
-- **Mac (Apple Silicon):** download the latest `BFD-T3-*-arm64.dmg` from
+- **Mac (Apple Silicon):** download the arm64 `.dmg` from the newest release in
   [Releases](https://github.com/black-flag-collective/bfd-t3-releases/releases).
 - **Linux:** the `.AppImage` or `.deb` from the same release.
 
