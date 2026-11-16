@@ -86,8 +86,8 @@ def unsigned_slice(data):
         offset += size
     if signature is None:
         return data
-    end = struct.unpack_from('<I', data, signature + 8)[0]
-    if content_end > end or any(data[content_end:end]):
+    end, signature_size = struct.unpack_from('<II', data, signature + 8)
+    if end + signature_size != len(data) or content_end > end or any(data[content_end:end]):
         return data
     out[signature + 8:signature + 16] = bytes(8)
     if linkedit is not None:

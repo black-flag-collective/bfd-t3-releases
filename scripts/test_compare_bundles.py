@@ -31,6 +31,11 @@ class SignatureComparisonTests(unittest.TestCase):
         self.assertNotEqual(compare.unsigned_slice(original), compare.unsigned_slice(bytes(changed_padding)))
 
 
+    def test_trailing_bytes_after_signature_are_compared(self):
+        original = binary()
+        self.assertNotEqual(compare.unsigned_slice(original), compare.unsigned_slice(original + b'changed'))
+        self.assertNotEqual(compare.unsigned_slice(original), compare.unsigned_slice(original + bytes(16)))
+
     def test_note_payload_outside_segments_is_retained(self):
         data = bytearray(272)
         data[:4] = b'\xcf\xfa\xed\xfe'
