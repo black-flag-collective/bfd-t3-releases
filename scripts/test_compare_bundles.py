@@ -36,6 +36,24 @@ class SignatureComparisonTests(unittest.TestCase):
         self.assertNotEqual(compare.unsigned_slice(original), compare.unsigned_slice(original + b'changed'))
         self.assertNotEqual(compare.unsigned_slice(original), compare.unsigned_slice(original + bytes(16)))
 
+    def test_dysymtab_module_sizes_and_segment_field_widths(self):
+        for header, segment_size, segment_cmd, field, module_size in (
+                (32, 72, 0x19, 'Q', 56), (28, 56, 1, 'I', 52)):
+            with self.subTest(header=header):
+                data = bytearray(336)
+                data[:4] = b'\xcf\xfa\xed\xfe' if header == 32 else b'\xce\xfa\xed\xfe'
+                struct.pack_into('<II', data, 16, 3, segment_size + 96)
+                struct.pack_into('<II16s', data, header, segment_cmd, segment_size, b'__LINKEDIT')
+                fileoff = header + (40 if header == 32 else 32)
+                struct.pack_into('<' + field, data, fileoff, 224)
+                dysymtab = header + segment_size
+                struct.pack_into('<II', data, dysymtab, 0xb, 80)
+                struct.pack_into('<II', data, dysymtab + 40, 224, 1)
+                struct.pack_into('<IIII', data, dysymtab + 80, 0x1d, 16, 320, 16)
+                normalized = compare.unsigned_slice(bytes(data))
+                self.assertEqual(len(normalized), 224 + module_size)
+                self.assertEqual(struct.unpack_from('<' + field, normalized, fileoff)[0], 224)
+
     def test_note_payload_outside_segments_is_retained(self):
         data = bytearray(272)
         data[:4] = b'\xcf\xfa\xed\xfe'
