@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 """Prove a stamped app is upstream's app: every file matches except the stamp.
 
-Mach-O files are compared with their code signatures removed, since re-signing rewrites them.
+Mach-O files are compared without their code signature and the size fields that point at it,\nsince re-signing rewrites only those.
 Allowed differences: Info.plist keys the stamp sets, the icon, the update feed's owner and repo,
 the removed provisioning profile and signature files. Anything else fails.
 
 usage: compare-bundles.py <upstream.app> <stamped.app>
 """
 import hashlib
-import os
 from pathlib import Path
 import plistlib
-import shutil
-import subprocess
+import struct
 import sys
-import tempfile
 
 STAMPED_PLIST_KEYS = {'CFBundleName', 'CFBundleDisplayName', 'ElectronTeamID', 'CFBundleIconName'}
 
@@ -33,19 +30,46 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+FAT_MAGIC = b'\xca\xfe\xba\xbe'
+LC_SEGMENT_64, LC_CODE_SIGNATURE = 0x19, 0x1D
+
+
 def is_macho(path):
     with path.open('rb') as stream:
         magic = stream.read(4)
-    return magic in (b'\xcf\xfa\xed\xfe', b'\xce\xfa\xed\xfe', b'\xca\xfe\xba\xbe', b'\xbe\xba\xfe\xca')
+    return magic in (b'\xcf\xfa\xed\xfe', FAT_MAGIC)
 
 
-def unsigned_digest(path, scratch):
-    copy = Path(scratch) / 'binary'
-    shutil.copyfile(path, copy)
-    os.chmod(copy, 0o755)
-    subprocess.run(['codesign', '--remove-signature', str(copy)], check=False,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return digest(copy)
+def unsigned_slice(data):
+    """A 64-bit Mach-O slice up to its code signature, with the fields that point at the
+    signature zeroed. Re-signing changes only those; every code and data byte stays put."""
+    if data[:4] != b'\xcf\xfa\xed\xfe':
+        return data
+    out = bytearray(data)
+    ncmds = struct.unpack_from('<I', data, 16)[0]
+    offset, end = 32, len(data)
+    for _ in range(ncmds):
+        cmd, size = struct.unpack_from('<II', data, offset)
+        if cmd == LC_CODE_SIGNATURE:
+            end = struct.unpack_from('<I', data, offset + 8)[0]
+            out[offset + 8:offset + 16] = bytes(8)
+        elif cmd == LC_SEGMENT_64 and data[offset + 8:offset + 24].rstrip(b'\0') == b'__LINKEDIT':
+            out[offset + 32:offset + 40] = bytes(8)  # vmsize
+            out[offset + 48:offset + 56] = bytes(8)  # filesize
+        offset += size
+    return bytes(out[:end])
+
+
+def unsigned_slices(path):
+    data = path.read_bytes()
+    if data[:4] != FAT_MAGIC:
+        return [unsigned_slice(data)]
+    count = struct.unpack_from('>I', data, 4)[0]
+    slices = []
+    for index in range(count):
+        cputype, subtype, offset, size, _ = struct.unpack_from('>iiIII', data, 8 + 20 * index)
+        slices.append((cputype, subtype, unsigned_slice(data[offset:offset + size])))
+    return slices
 
 
 def main(upstream, stamped):
@@ -77,10 +101,8 @@ def main(upstream, stamped):
             continue
         if digest(a) == digest(b):
             continue
-        if is_macho(a) and is_macho(b):
-            with tempfile.TemporaryDirectory() as scratch:
-                if unsigned_digest(a, scratch) == unsigned_digest(b, scratch):
-                    continue
+        if is_macho(a) and is_macho(b) and unsigned_slices(a) == unsigned_slices(b):
+            continue
         problems.append(f'content differs: {relative}')
     print(f'compared {len(left)} upstream files with {len(right)} stamped files')
     for problem in problems:
