@@ -31,5 +31,17 @@ class SignatureComparisonTests(unittest.TestCase):
         self.assertNotEqual(compare.unsigned_slice(original), compare.unsigned_slice(bytes(changed_padding)))
 
 
+    def test_note_payload_outside_segments_is_retained(self):
+        data = bytearray(272)
+        data[:4] = b'\xcf\xfa\xed\xfe'
+        struct.pack_into('<II', data, 16, 2, 56)
+        struct.pack_into('<II16sQQ', data, 32, 0x31, 40, b'owner', 200, 4)
+        struct.pack_into('<IIII', data, 72, 0x1d, 16, 256, 16)
+        self.assertEqual(len(compare.unsigned_slice(bytes(data))), 204)
+        changed = bytearray(data)
+        changed[201] = 1
+        self.assertNotEqual(compare.unsigned_slice(bytes(data)), compare.unsigned_slice(bytes(changed)))
+
+
 if __name__ == '__main__':
     unittest.main()

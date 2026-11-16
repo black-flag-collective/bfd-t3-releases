@@ -73,6 +73,9 @@ def unsigned_slice(data):
         elif cmd in (0x1e, 0x26, 0x29, 0x2b, 0x2e, 0x80000033, 0x80000034, 0x36, 0x37, 0x38):
             start, length = struct.unpack_from('<II', data, offset + 8)
             content_end = max(content_end, start + length)
+        elif cmd == 0x31:  # LC_NOTE stores its file offset and size as uint64.
+            start, length = struct.unpack_from('<QQ', data, offset + 24)
+            content_end = max(content_end, start + length)
         elif cmd == 0x16:  # LC_TWOLEVEL_HINTS.
             start, count = struct.unpack_from('<II', data, offset + 8)
             content_end = max(content_end, start + count * 4)
