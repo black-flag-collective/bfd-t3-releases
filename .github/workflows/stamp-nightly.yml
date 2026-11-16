@@ -1,0 +1,181 @@
+name: Stamp upstream nightly
+
+# Each upstream T3 Code nightly becomes a BFD Agora nightly: upstream's own signed app with only the
+# name, icon and update feed changed, re-signed by Black Flag. Nothing here builds T3 from source.
+on:
+  schedule:
+    - cron: "41 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Upstream nightly to stamp, such as 0.1.10-nightly.20261116.4761 (default newest)
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stamp-nightly
+  cancel-in-progress: false
+
+env:
+  UPSTREAM: pingdotgg/t3code
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.pick.outputs.version }}
+    steps:
+      - id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="${REQUESTED:-}"
+          if [ -z "$version" ]; then
+            for tag in $(gh release list -R "$UPSTREAM" --limit 30 --json tagName -q '.[].tagName' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}\.[0-9]+$'); do
+              if gh release view "$tag" -R "$UPSTREAM" --json assets -q '.assets[].name' | grep -qx 'nightly-mac.yml'; then
+                version="${tag#v}"; break
+              fi
+            done
+          fi
+          [ -n "$version" ] || { echo "No upstream nightly with a Mac feed yet"; exit 0; }
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}\.[0-9]+$ ]] || { echo "::error::$version is not an upstream nightly version"; exit 1; }
+          if gh release view "v$version" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "BFD Agora $version is already published"; exit 0
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  stamp:
+    needs: plan
+    if: needs.plan.outputs.version != ''
+    runs-on: macos-15
+    timeout-minutes: 75
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and verify upstream's release
+        run: |
+          set -euo pipefail
+          mkdir -p upstream && cd upstream
+          for asset in nightly-mac.yml SHA256SUMS "T3-Code-$VERSION-arm64.zip" "T3-Code-$VERSION-x64.zip" "t3-$VERSION-darwin-arm64.tar.gz"; do
+            gh release download "v$VERSION" -R "$UPSTREAM" -p "$asset"
+          done
+          python3 - <<'PY'
+          import base64, hashlib, os, re
+          feed = open('nightly-mac.yml').read()
+          for name, sha512 in re.findall(r'url: (\S+\.zip)\n\s+sha512: (\S+)', feed):
+              got = base64.b64encode(hashlib.sha512(open(name, 'rb').read()).digest()).decode()
+              assert got == sha512, f'{name} does not match upstream nightly-mac.yml'
+              print('verified', name)
+          PY
+          grep " t3-$VERSION-darwin-arm64.tar.gz$" SHA256SUMS | shasum -a 256 -c -
+          mkdir cli && tar -xzf "t3-$VERSION-darwin-arm64.tar.gz" -C cli --strip-components 1
+          test "$(cli/t3 --version)" = "t3 v$VERSION"
+
+      - name: Prepare signing
+        env:
+          CERT_P12: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          keychain="$RUNNER_TEMP/bfd-agora.keychain-db"
+          password=$(openssl rand -hex 24)
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" >/dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          mkdir icon.iconset
+          for size in 16 32 128 256 512; do
+            sips -z $size $size assets/bfd-agora-icon-1024.png --out icon.iconset/icon_${size}x${size}.png >/dev/null
+            sips -z $((size*2)) $((size*2)) assets/bfd-agora-icon-1024.png --out icon.iconset/icon_${size}x${size}@2x.png >/dev/null
+          done
+          iconutil -c icns icon.iconset -o "$RUNNER_TEMP/bfd-agora.icns"
+
+      - name: Stamp and re-sign
+        env:
+          SIGN_IDENTITY: ${{ vars.MAC_SIGN_IDENTITY }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          export ICNS="$RUNNER_TEMP/bfd-agora.icns"
+          for arch in arm64 x64; do
+            scripts/stamp-mac.sh "upstream/T3-Code-$VERSION-$arch.zip" "stamped/$arch" "$arch"
+            mkdir -p "reference/$arch"
+            ditto -x -k "upstream/T3-Code-$VERSION-$arch.zip" "reference/$arch"
+            python3 scripts/compare-bundles.py reference/$arch/*.app "stamped/$arch/BFD Agora.app"
+          done
+
+      - name: Stamped server matches upstream's
+        run: scripts/check-server.sh "stamped/arm64/BFD Agora.app" upstream/cli
+
+      - name: Notarize
+        id: notary
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          set -euo pipefail
+          status=0
+          node scripts/check-apple-notary.mjs || status=$?
+          if [ "$status" = 2 ]; then
+            # Only the pending Apple Developer agreement allows a signed, unnotarized release.
+            echo "notarized=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Published signed but not notarized. Notarization resumes by itself once the Apple Developer agreement is accepted."
+            exit 0
+          fi
+          [ "$status" = 0 ] || exit "$status"
+          printf '%s' "$APPLE_API_KEY" > "$RUNNER_TEMP/notary.p8"
+          for arch in arm64 x64; do
+            ditto -c -k --keepParent "stamped/$arch/BFD Agora.app" "$RUNNER_TEMP/notarize-$arch.zip"
+            xcrun notarytool submit "$RUNNER_TEMP/notarize-$arch.zip" --key "$RUNNER_TEMP/notary.p8" \
+              --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" --wait
+            xcrun stapler staple "stamped/$arch/BFD Agora.app"
+          done
+          rm -f "$RUNNER_TEMP/notary.p8"
+          echo "notarized=true" >> "$GITHUB_OUTPUT"
+
+      - name: Package
+        env:
+          SIGN_IDENTITY: ${{ vars.MAC_SIGN_IDENTITY }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for arch in arm64 x64; do
+            ditto -c -k --sequesterRsrc --keepParent "stamped/$arch/BFD Agora.app" "dist/BFD-Agora-$VERSION-$arch.zip"
+            mkdir -p "dmg-$arch" && ditto "stamped/$arch/BFD Agora.app" "dmg-$arch/BFD Agora.app"
+            ln -s /Applications "dmg-$arch/Applications"
+            hdiutil create -volname "BFD Agora" -srcfolder "dmg-$arch" -ov -format UDZO "dist/BFD-Agora-$VERSION-$arch.dmg"
+            codesign --force --timestamp --sign "$SIGN_IDENTITY" "dist/BFD-Agora-$VERSION-$arch.dmg"
+          done
+          python3 scripts/mac-feed.py "$VERSION" dist
+
+      - name: Publish
+        env:
+          NOTARIZED: ${{ steps.notary.outputs.notarized }}
+        run: |
+          set -euo pipefail
+          notes="Upstream T3 Code [v$VERSION](https://github.com/$UPSTREAM/releases/tag/v$VERSION), stamped as BFD Agora: name, icon and update feed only, re-signed by Black Flag.
+
+          Checks: every file matches upstream's app apart from the stamp (Mach-O compared without signatures), and the app's server reports the same version, orchestration protocol and database schema as upstream's CLI."
+          if [ "$NOTARIZED" != "true" ]; then
+            notes="$notes
+
+          Not notarized yet: Apple is waiting on the developer agreement. A first install needs \`xattr -dr com.apple.quarantine \"/Applications/BFD Agora.app\"\`; updates install normally."
+          fi
+          gh release create "v$VERSION" dist/* --repo "$GITHUB_REPOSITORY" --prerelease \
+            --title "BFD Agora $VERSION" --notes "$notes"
+
+      - name: Remove signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/bfd-agora.keychain-db" 2>/dev/null || true
