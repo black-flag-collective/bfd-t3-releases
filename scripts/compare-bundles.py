@@ -30,45 +30,51 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-FAT_MAGIC = b'\xca\xfe\xba\xbe'
-LC_SEGMENT_64, LC_CODE_SIGNATURE = 0x19, 0x1D
+FAT_MAGICS = {b'\xca\xfe\xba\xbe': '>', b'\xbe\xba\xfe\xca': '<'}
+# Thin magic -> (header size, segment command, offsets of vmsize and filesize, field format)
+THIN = {b'\xcf\xfa\xed\xfe': (32, 0x19, 32, 48, 'Q'), b'\xce\xfa\xed\xfe': (28, 0x1, 28, 36, 'I')}
+LC_CODE_SIGNATURE = 0x1D
 
 
 def is_macho(path):
     with path.open('rb') as stream:
         magic = stream.read(4)
-    return magic in (b'\xcf\xfa\xed\xfe', FAT_MAGIC)
+    return magic in THIN or magic in FAT_MAGICS
 
 
 def unsigned_slice(data):
-    """A 64-bit Mach-O slice up to its code signature, with the fields that point at the
-    signature zeroed. Re-signing changes only those; every code and data byte stays put."""
-    if data[:4] != b'\xcf\xfa\xed\xfe':
+    """A thin Mach-O up to its code signature, with the fields that point at the signature
+    zeroed. Re-signing changes only those; every code and data byte stays put."""
+    layout = THIN.get(data[:4])
+    if layout is None:
         return data
+    header, segment, vmsize, filesize, field = layout
+    width = struct.calcsize(field)
     out = bytearray(data)
     ncmds = struct.unpack_from('<I', data, 16)[0]
-    offset, end = 32, len(data)
+    offset, end = header, len(data)
     for _ in range(ncmds):
         cmd, size = struct.unpack_from('<II', data, offset)
         if cmd == LC_CODE_SIGNATURE:
             end = struct.unpack_from('<I', data, offset + 8)[0]
             out[offset + 8:offset + 16] = bytes(8)
-        elif cmd == LC_SEGMENT_64 and data[offset + 8:offset + 24].rstrip(b'\0') == b'__LINKEDIT':
-            out[offset + 32:offset + 40] = bytes(8)  # vmsize
-            out[offset + 48:offset + 56] = bytes(8)  # filesize
+        elif cmd == segment and data[offset + 8:offset + 24].rstrip(b'\0') == b'__LINKEDIT':
+            out[offset + vmsize:offset + vmsize + width] = bytes(width)
+            out[offset + filesize:offset + filesize + width] = bytes(width)
         offset += size
     return bytes(out[:end])
 
 
 def unsigned_slices(path):
     data = path.read_bytes()
-    if data[:4] != FAT_MAGIC:
+    order = FAT_MAGICS.get(data[:4])
+    if order is None:
         return [unsigned_slice(data)]
-    count = struct.unpack_from('>I', data, 4)[0]
+    count = struct.unpack_from(order + 'I', data, 4)[0]
     slices = []
     for index in range(count):
         # Offsets and sizes move when slices are re-signed; architecture and alignment do not.
-        cputype, subtype, offset, size, align = struct.unpack_from('>iiIII', data, 8 + 20 * index)
+        cputype, subtype, offset, size, align = struct.unpack_from(order + 'iiIII', data, 8 + 20 * index)
         slices.append((cputype, subtype, align, unsigned_slice(data[offset:offset + size])))
     return slices
 
