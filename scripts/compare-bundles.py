@@ -52,16 +52,21 @@ def unsigned_slice(data):
     width = struct.calcsize(field)
     out = bytearray(data)
     ncmds = struct.unpack_from('<I', data, 16)[0]
-    offset, end = header, len(data)
+    offset, signature, linkedit = header, None, None
     for _ in range(ncmds):
         cmd, size = struct.unpack_from('<II', data, offset)
         if cmd == LC_CODE_SIGNATURE:
-            end = struct.unpack_from('<I', data, offset + 8)[0]
-            out[offset + 8:offset + 16] = bytes(8)
+            signature = offset
         elif cmd == segment and data[offset + 8:offset + 24].rstrip(b'\0') == b'__LINKEDIT':
-            out[offset + vmsize:offset + vmsize + width] = bytes(width)
-            out[offset + filesize:offset + filesize + width] = bytes(width)
+            linkedit = offset
         offset += size
+    if signature is None:
+        return data
+    end = struct.unpack_from('<I', data, signature + 8)[0]
+    out[signature + 8:signature + 16] = bytes(8)
+    if linkedit is not None:
+        out[linkedit + vmsize:linkedit + vmsize + width] = bytes(width)
+        out[linkedit + filesize:linkedit + filesize + width] = bytes(width)
     return bytes(out[:end])
 
 
