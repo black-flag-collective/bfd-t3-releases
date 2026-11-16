@@ -59,8 +59,7 @@ export function notaryVerdict(status, body) {
       message: `Apple's notary service refused this key: ${status} ${title || code}`.trim(),
     };
   }
-  // Apple's own outage is not ours to fail on; notarization itself decides later.
-  return { ok: true, message: `Apple's notary service answered ${status}; continuing.` };
+  return { ok: false, message: `Apple's notary service answered ${status}.` };
 }
 
 async function main() {
@@ -85,9 +84,10 @@ async function main() {
     });
     verdict = notaryVerdict(response.status, await response.text());
   } catch (error) {
+    // Unreachable is not ready: the release fails and the next scheduled run tries again.
     verdict = {
-      ok: true,
-      message: `Could not reach Apple's notary service (${error.name}); continuing.`,
+      ok: false,
+      message: `Could not reach Apple's notary service (${error.name}).`,
     };
   }
   console.log(

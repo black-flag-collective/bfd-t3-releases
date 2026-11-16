@@ -42,6 +42,7 @@ jobs:
             done
           fi
           [ -n "$version" ] || { echo "No upstream nightly with a Mac feed yet"; exit 0; }
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}\.[0-9]+$ ]] || { echo "::error::$version is not an upstream nightly version"; exit 1; }
           if gh release view "v$version" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "BFD Agora $version is already published"; exit 0
           fi
