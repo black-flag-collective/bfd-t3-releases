@@ -67,8 +67,9 @@ def unsigned_slices(path):
     count = struct.unpack_from('>I', data, 4)[0]
     slices = []
     for index in range(count):
-        cputype, subtype, offset, size, _ = struct.unpack_from('>iiIII', data, 8 + 20 * index)
-        slices.append((cputype, subtype, unsigned_slice(data[offset:offset + size])))
+        # Offsets and sizes move when slices are re-signed; architecture and alignment do not.
+        cputype, subtype, offset, size, align = struct.unpack_from('>iiIII', data, 8 + 20 * index)
+        slices.append((cputype, subtype, align, unsigned_slice(data[offset:offset + size])))
     return slices
 
 
