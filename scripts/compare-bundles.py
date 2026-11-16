@@ -33,6 +33,7 @@ def digest(path):
 FAT_MAGICS = {b'\xca\xfe\xba\xbe': '>', b'\xbe\xba\xfe\xca': '<'}
 # Thin magic -> (header size, segment command, offsets of vmsize and filesize, field format)
 THIN = {b'\xcf\xfa\xed\xfe': (32, 0x19, 32, 48, 'Q'), b'\xce\xfa\xed\xfe': (28, 0x1, 28, 36, 'I')}
+THIN.update({magic[::-1]: layout for magic, layout in tuple(THIN.items())})
 LC_CODE_SIGNATURE = 0x1D
 
 
@@ -49,44 +50,45 @@ def unsigned_slice(data):
     if layout is None:
         return data
     header, segment, vmsize, filesize, field = layout
+    order = '<' if data[:1] in (b'\xcf', b'\xce') else '>'
     width = struct.calcsize(field)
     out = bytearray(data)
-    ncmds = struct.unpack_from('<I', data, 16)[0]
+    ncmds = struct.unpack_from(order + 'I', data, 16)[0]
     offset, signature, linkedit = header, None, None
-    content_end = header + struct.unpack_from('<I', data, 20)[0]
+    content_end = header + struct.unpack_from(order + 'I', data, 20)[0]
     for _ in range(ncmds):
-        cmd, size = struct.unpack_from('<II', data, offset)
+        cmd, size = struct.unpack_from(order + 'II', data, offset)
         if cmd == LC_CODE_SIGNATURE:
             signature = offset
         elif cmd == segment and data[offset + 8:offset + 24].rstrip(b'\0') == b'__LINKEDIT':
             linkedit = offset
         if cmd == segment and data[offset + 8:offset + 24].rstrip(b'\0') != b'__LINKEDIT':
-            fileoff = struct.unpack_from('<' + field, data, offset + (40 if header == 32 else 32))[0]
-            length = struct.unpack_from('<' + field, data, offset + filesize)[0]
+            fileoff = struct.unpack_from(order + field, data, offset + (40 if header == 32 else 32))[0]
+            length = struct.unpack_from(order + field, data, offset + filesize)[0]
             content_end = max(content_end, fileoff + length)
         elif cmd == 0x2:  # LC_SYMTAB: symbols and string table.
-            symoff, count, stroff, strsize = struct.unpack_from('<IIII', data, offset + 8)
+            symoff, count, stroff, strsize = struct.unpack_from(order + 'IIII', data, offset + 8)
             content_end = max(content_end, symoff + count * (16 if header == 32 else 12), stroff + strsize)
         elif cmd in (0x22, 0x80000022):  # LC_DYLD_INFO[_ONLY].
-            pairs = struct.unpack_from('<10I', data, offset + 8)
+            pairs = struct.unpack_from(order + '10I', data, offset + 8)
             content_end = max(content_end, *(start + length for start, length in zip(pairs[::2], pairs[1::2])))
         elif cmd in (0x1e, 0x26, 0x29, 0x2b, 0x2e, 0x80000033, 0x80000034, 0x36, 0x37, 0x38):
-            start, length = struct.unpack_from('<II', data, offset + 8)
+            start, length = struct.unpack_from(order + 'II', data, offset + 8)
             content_end = max(content_end, start + length)
         elif cmd == 0x31:  # LC_NOTE stores its file offset and size as uint64.
-            start, length = struct.unpack_from('<QQ', data, offset + 24)
+            start, length = struct.unpack_from(order + 'QQ', data, offset + 24)
             content_end = max(content_end, start + length)
         elif cmd == 0x16:  # LC_TWOLEVEL_HINTS.
-            start, count = struct.unpack_from('<II', data, offset + 8)
+            start, count = struct.unpack_from(order + 'II', data, offset + 8)
             content_end = max(content_end, start + count * 4)
         elif cmd == 0xb:  # LC_DYSYMTAB's six on-disk tables.
-            tables = struct.unpack_from('<12I', data, offset + 32)
+            tables = struct.unpack_from(order + '12I', data, offset + 32)
             for index, record_size in enumerate((8, 56 if header == 32 else 52, 4, 4, 8, 8)):
                 content_end = max(content_end, tables[index * 2] + tables[index * 2 + 1] * record_size)
         offset += size
     if signature is None:
         return data
-    end, signature_size = struct.unpack_from('<II', data, signature + 8)
+    end, signature_size = struct.unpack_from(order + 'II', data, signature + 8)
     if end + signature_size != len(data) or content_end > end or any(data[content_end:end]):
         return data
     out[signature + 8:signature + 16] = bytes(8)

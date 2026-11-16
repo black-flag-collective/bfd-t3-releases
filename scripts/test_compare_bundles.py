@@ -54,6 +54,21 @@ class SignatureComparisonTests(unittest.TestCase):
                 self.assertEqual(len(normalized), 224 + module_size)
                 self.assertEqual(struct.unpack_from('<' + field, normalized, fileoff)[0], 224)
 
+    def test_big_endian_slices_normalize_signature_changes(self):
+        for header, magic in ((28, b'\xfe\xed\xfa\xce'), (32, b'\xfe\xed\xfa\xcf')):
+            with self.subTest(header=header):
+                data = bytearray(144)
+                data[:4] = magic
+                struct.pack_into('>II', data, 16, 2, 40)
+                struct.pack_into('>IIIIII', data, header, 2, 24, 0, 0, 96, 4)
+                struct.pack_into('>IIII', data, header + 24, 0x1d, 16, 128, 16)
+                data[96:100] = b'code'
+                changed = bytearray(data)
+                changed[128:] = b'x' * 16
+                self.assertEqual(compare.unsigned_slice(bytes(data)), compare.unsigned_slice(bytes(changed)))
+                changed[96] = 1
+                self.assertNotEqual(compare.unsigned_slice(bytes(data)), compare.unsigned_slice(bytes(changed)))
+
     def test_note_payload_outside_segments_is_retained(self):
         data = bytearray(272)
         data[:4] = b'\xcf\xfa\xed\xfe'
