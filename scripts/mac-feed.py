@@ -21,7 +21,7 @@ if not zips:
 lines = [f"version: '{version}'", 'files:']
 for name, sha512, size in entries:
     lines += [f'  - url: {name}', f'    sha512: {sha512}', f'    size: {size}']
-lines += [f'path: {zips[0][0]}', f'sha512: {zips[0][1]}',
-          f"releaseDate: '{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')}'"]
+# Like upstream's feed: electron-updater picks each Mac's zip from `files` by architecture.
+lines += [f"releaseDate: '{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')}'"]
 (folder / 'nightly-mac.yml').write_text('\n'.join(lines) + '\n')
 print((folder / 'nightly-mac.yml').read_text())

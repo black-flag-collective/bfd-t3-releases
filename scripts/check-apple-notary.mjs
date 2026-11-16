@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Ask Apple's notary service whether it accepts this team's API key before notarizing.
-// Apple refuses while the developer account has an agreement waiting. Reads APPLE_API_KEY (the .p8 text), APPLE_API_KEY_ID and APPLE_API_ISSUER; uploads nothing.
+// Apple refuses while the developer account has an agreement waiting; that case alone exits 2,
+// any other refusal exits 1. Reads APPLE_API_KEY (the .p8 text), APPLE_API_KEY_ID and APPLE_API_ISSUER; uploads nothing.
 import * as NodeCrypto from "node:crypto";
 
 const NOTARY_URL = "https://appstoreconnect.apple.com/notary/v2/submissions";
@@ -37,6 +38,7 @@ export function notaryVerdict(status, body) {
   if (status === 403 && code.includes("AGREEMENT")) {
     return {
       ok: false,
+      agreement: true,
       message:
         "Apple will not notarize for this team until the account holder accepts the current " +
         "Apple Developer agreement. Sign in at https://developer.apple.com/account as the " +
@@ -93,7 +95,7 @@ async function main() {
       ? verdict.message
       : `::error title=Apple notarization is blocked::${verdict.message}`,
   );
-  process.exit(verdict.ok ? 0 : 1);
+  process.exit(verdict.ok ? 0 : verdict.agreement ? 2 : 1);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) await main();

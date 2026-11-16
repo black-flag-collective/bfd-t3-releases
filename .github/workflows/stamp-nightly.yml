@@ -125,11 +125,15 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
           set -euo pipefail
-          if ! node scripts/check-apple-notary.mjs; then
+          status=0
+          node scripts/check-apple-notary.mjs || status=$?
+          if [ "$status" = 2 ]; then
+            # Only the pending Apple Developer agreement allows a signed, unnotarized release.
             echo "notarized=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Published signed but not notarized. Notarization resumes by itself once Apple accepts the team's key."
+            echo "::warning::Published signed but not notarized. Notarization resumes by itself once the Apple Developer agreement is accepted."
             exit 0
           fi
+          [ "$status" = 0 ] || exit "$status"
           printf '%s' "$APPLE_API_KEY" > "$RUNNER_TEMP/notary.p8"
           for arch in arm64 x64; do
             ditto -c -k --keepParent "stamped/$arch/BFD Agora.app" "$RUNNER_TEMP/notarize-$arch.zip"
