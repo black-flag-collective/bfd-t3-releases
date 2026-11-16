@@ -51,6 +51,9 @@ def unsigned_digest(path, scratch):
 def main(upstream, stamped):
     left, right = files(upstream), files(stamped)
     problems = []
+    # Only the icon the stamp replaced may differ; any other .icns must match upstream.
+    icon_file = plistlib.loads((upstream / 'Contents/Info.plist').read_bytes()).get('CFBundleIconFile', '')
+    stamped_icon = f"Contents/Resources/{icon_file.removesuffix('.icns')}.icns" if icon_file else None
     for relative in sorted(set(left) | set(right)):
         if relative == 'Contents/embedded.provisionprofile' and relative not in right:
             continue
@@ -70,7 +73,7 @@ def main(upstream, stamped):
             if strip(a.read_text()) != strip(b.read_text()):
                 problems.append('app-update.yml changed beyond owner and repo')
             continue
-        if relative.startswith('Contents/Resources/') and relative.endswith('.icns'):
+        if relative == stamped_icon:
             continue
         if digest(a) == digest(b):
             continue
