@@ -93,6 +93,33 @@ class SignatureComparisonTests(unittest.TestCase):
             changed[position] ^= 1
             self.assertNotEqual(normalized(original), normalized(bytes(changed)))
 
+    def test_fat64_slices_and_reserved_metadata(self):
+        for order, magic in (('>', b'\xca\xfe\xba\xbf'), ('<', b'\xbf\xba\xfe\xca')):
+            with self.subTest(order=order), tempfile.TemporaryDirectory() as root:
+                def normalized(signature, reserved=0):
+                    thin = binary(signature=signature)
+                    data = bytearray(64 + len(thin))
+                    data[:4] = magic
+                    struct.pack_into(order + 'IiiQQII', data, 4, 1, 7, 3, 64, len(thin), 4, reserved)
+                    data[64:] = thin
+                    path = Path(root) / 'fat64'
+                    path.write_bytes(data)
+                    self.assertTrue(compare.is_macho(path))
+                    return compare.unsigned_slices(path)
+                self.assertEqual(normalized(b'original'), normalized(b'resigned'))
+                self.assertNotEqual(normalized(b'original'), normalized(b'original', 1))
+
+    def test_malformed_magic_prefixed_files_compare_as_raw_bytes(self):
+        cases = [b'\xcf\xfa\xed\xfe', b'\xca\xfe\xba\xbe']
+        invalid_command = bytearray(binary())
+        struct.pack_into('<I', invalid_command, 36, 0)
+        cases.append(bytes(invalid_command))
+        for data in cases:
+            with self.subTest(data=data[:4]), tempfile.TemporaryDirectory() as root:
+                path = Path(root) / 'malformed'
+                path.write_bytes(data)
+                self.assertEqual(compare.unsigned_slices(path), [data])
+
     def test_note_payload_outside_segments_is_retained(self):
         data = bytearray(272)
         data[:4] = b'\xcf\xfa\xed\xfe'

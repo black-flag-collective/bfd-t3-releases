@@ -30,7 +30,8 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-FAT_MAGICS = {b'\xca\xfe\xba\xbe': '>', b'\xbe\xba\xfe\xca': '<'}
+FAT_MAGICS = {b'\xca\xfe\xba\xbe': ('>', 'iiIII'), b'\xbe\xba\xfe\xca': ('<', 'iiIII'),
+              b'\xca\xfe\xba\xbf': ('>', 'iiQQII'), b'\xbf\xba\xfe\xca': ('<', 'iiQQII')}
 # Thin magic -> (header size, segment command, offsets of vmsize and filesize, field format)
 THIN = {b'\xcf\xfa\xed\xfe': (32, 0x19, 32, 48, 'Q'), b'\xce\xfa\xed\xfe': (28, 0x1, 28, 36, 'I')}
 THIN.update({magic[::-1]: layout for magic, layout in tuple(THIN.items())})
@@ -44,6 +45,13 @@ def is_macho(path):
 
 
 def unsigned_slice(data):
+    try:
+        return _unsigned_slice(data)
+    except struct.error:
+        return data
+
+
+def _unsigned_slice(data):
     """A thin Mach-O through its referenced content, with signature fields zeroed.
     Only zero padding between the referenced content and signature is omitted."""
     layout = THIN.get(data[:4])
@@ -56,38 +64,50 @@ def unsigned_slice(data):
     ncmds = struct.unpack_from(order + 'I', data, 16)[0]
     offset, signature, linkedit = header, None, None
     content_end = header + struct.unpack_from(order + 'I', data, 20)[0]
+    commands_end = content_end
+    if len(data) < header or commands_end > len(data) or ncmds > (commands_end - header) // 8:
+        return data
     for _ in range(ncmds):
         cmd, size = struct.unpack_from(order + 'II', data, offset)
+        if size < 8 or offset + size > commands_end:
+            return data
+        if cmd == LC_CODE_SIGNATURE and size < 16:
+            return data
+        if cmd == segment and size < (72 if header == 32 else 56):
+            return data
+        command = data[offset:offset + size]
         if cmd == LC_CODE_SIGNATURE:
             signature = offset
         elif cmd == segment and data[offset + 8:offset + 24].rstrip(b'\0') == b'__LINKEDIT':
             linkedit = offset
         if cmd == segment and data[offset + 8:offset + 24].rstrip(b'\0') != b'__LINKEDIT':
-            fileoff = struct.unpack_from(order + field, data, offset + (40 if header == 32 else 32))[0]
-            length = struct.unpack_from(order + field, data, offset + filesize)[0]
+            fileoff = struct.unpack_from(order + field, command, (40 if header == 32 else 32))[0]
+            length = struct.unpack_from(order + field, command, filesize)[0]
             content_end = max(content_end, fileoff + length)
         elif cmd == 0x2:  # LC_SYMTAB: symbols and string table.
-            symoff, count, stroff, strsize = struct.unpack_from(order + 'IIII', data, offset + 8)
+            symoff, count, stroff, strsize = struct.unpack_from(order + 'IIII', command, 8)
             content_end = max(content_end, symoff + count * (16 if header == 32 else 12), stroff + strsize)
         elif cmd in (0x22, 0x80000022):  # LC_DYLD_INFO[_ONLY].
-            pairs = struct.unpack_from(order + '10I', data, offset + 8)
+            pairs = struct.unpack_from(order + '10I', command, 8)
             content_end = max(content_end, *(start + length for start, length in zip(pairs[::2], pairs[1::2])))
         elif cmd in (0x1e, 0x26, 0x29, 0x2b, 0x2e, 0x80000033, 0x80000034, 0x36, 0x37, 0x38):
-            start, length = struct.unpack_from(order + 'II', data, offset + 8)
+            start, length = struct.unpack_from(order + 'II', command, 8)
             content_end = max(content_end, start + length)
         elif cmd == 0x31:  # LC_NOTE stores its file offset and size as uint64.
-            start, length = struct.unpack_from(order + 'QQ', data, offset + 24)
+            start, length = struct.unpack_from(order + 'QQ', command, 24)
             content_end = max(content_end, start + length)
         elif cmd == 0x16:  # LC_TWOLEVEL_HINTS.
-            start, count = struct.unpack_from(order + 'II', data, offset + 8)
+            start, count = struct.unpack_from(order + 'II', command, 8)
             content_end = max(content_end, start + count * 4)
         elif cmd == 0xb:  # LC_DYSYMTAB's six on-disk tables.
-            tables = struct.unpack_from(order + '12I', data, offset + 32)
+            tables = struct.unpack_from(order + '12I', command, 32)
             # https://github.com/apple-oss-distributions/cctools/blob/main/include/mach-o/loader.h
             module_size = struct.calcsize(order + ('12IQ' if header == 32 else '13I'))
             for index, record_size in enumerate((8, module_size, 4, 4, 8, 8)):
                 content_end = max(content_end, tables[index * 2] + tables[index * 2 + 1] * record_size)
         offset += size
+    if offset != commands_end:
+        return data
     if signature is None:
         return data
     end, signature_size = struct.unpack_from(order + 'II', data, signature + 8)
@@ -102,22 +122,28 @@ def unsigned_slice(data):
 
 def unsigned_slices(path):
     data = path.read_bytes()
-    order = FAT_MAGICS.get(data[:4])
-    if order is None:
+    layout = FAT_MAGICS.get(data[:4])
+    if layout is None:
         return [unsigned_slice(data)]
+    if len(data) < 8:
+        return [data]
+    order, record = layout
+    record_size = struct.calcsize(order + record)
     count = struct.unpack_from(order + 'I', data, 4)[0]
     slices = [(data[:4], count)]
     ranges = []
-    header_end = 8 + 20 * count
+    header_end = 8 + record_size * count
     if header_end > len(data):
         return [data]
     for index in range(count):
         # Offsets and sizes move when slices are re-signed; architecture and alignment do not.
-        cputype, subtype, offset, size, align = struct.unpack_from(order + 'iiIII', data, 8 + 20 * index)
+        values = struct.unpack_from(order + record, data, 8 + record_size * index)
+        cputype, subtype, offset, size, align = values[:5]
+        reserved = values[5:]
         if offset < header_end or offset + size > len(data):
             return [data]
         ranges.append((offset, offset + size))
-        slices.append((cputype, subtype, align, unsigned_slice(data[offset:offset + size])))
+        slices.append((cputype, subtype, align, reserved, unsigned_slice(data[offset:offset + size])))
     cursor = header_end
     for start, end in sorted(ranges):
         # Re-signing can move aligned slices, but cannot add nonzero gap content.
