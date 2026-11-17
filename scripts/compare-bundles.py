@@ -83,7 +83,9 @@ def unsigned_slice(data):
             content_end = max(content_end, start + count * 4)
         elif cmd == 0xb:  # LC_DYSYMTAB's six on-disk tables.
             tables = struct.unpack_from(order + '12I', data, offset + 32)
-            for index, record_size in enumerate((8, 56 if header == 32 else 52, 4, 4, 8, 8)):
+            # https://github.com/apple-oss-distributions/cctools/blob/main/include/mach-o/loader.h
+            module_size = struct.calcsize(order + ('12IQ' if header == 32 else '13I'))
+            for index, record_size in enumerate((8, module_size, 4, 4, 8, 8)):
                 content_end = max(content_end, tables[index * 2] + tables[index * 2 + 1] * record_size)
         offset += size
     if signature is None:
