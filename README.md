@@ -35,3 +35,14 @@ t3 theme set /tmp/bfd-agora.json
 ```
 
 Or import the file in **Settings → Appearance**.
+
+The sidebar is an update board, and a thread's title decides where it sits:
+
+- `NEEDS <NAME>: <exact action>` goes under **Needs a person**, with that person's picture.
+- `READ: <result>` goes under **To read**, with a **Got it** button that settles it.
+- Any other title goes under **Agents**: agents have it and no person has anything to do.
+
+Each row also shows who started it: a person, an agent, a delegate or a scheduled job. A
+title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
+that person as the one who asked. The top bar repeats the same three groups with counts.
+Portraits are embedded in the theme, so a new teammate needs a portrait added to it.
