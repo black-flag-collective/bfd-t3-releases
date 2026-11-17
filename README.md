@@ -48,5 +48,6 @@ group, `Approve send` and `Approve release` titles and pending native approvals 
 
 Each row also shows who started it: a person, an agent, a delegate or a scheduled job. A
 title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
-that person as the one who asked. The top bar repeats the same three groups with counts.
+that person as the one who asked. A `NEEDS` row always shows the person who has to act
+instead, whatever its ending. The top bar repeats the same three groups with counts.
 Portraits are embedded in the theme, so a new teammate needs a portrait added to it.
