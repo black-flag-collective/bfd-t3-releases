@@ -42,6 +42,10 @@ The sidebar is an update board, and a thread's title decides where it sits:
 - `READ: <result>` goes under **To read**, with a **Got it** button that settles it.
 - Any other title goes under **Agents**: agents have it and no person has anything to do.
 
+One exception to the title rule: a thread with a pending native approval, question or request
+also sits under **Needs a person**, because it is stopped until someone answers. Inside that
+group, `Approve send` and `Approve release` titles and pending native approvals come first.
+
 Each row also shows who started it: a person, an agent, a delegate or a scheduled job. A
 title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
 that person as the one who asked. The top bar repeats the same three groups with counts.
