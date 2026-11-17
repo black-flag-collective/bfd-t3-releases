@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import struct
+import tempfile
 import unittest
 
 spec = importlib.util.spec_from_file_location('compare_bundles', Path(__file__).with_name('compare-bundles.py'))
@@ -68,6 +69,29 @@ class SignatureComparisonTests(unittest.TestCase):
                 self.assertEqual(compare.unsigned_slice(bytes(data)), compare.unsigned_slice(bytes(changed)))
                 changed[96] = 1
                 self.assertNotEqual(compare.unsigned_slice(bytes(data)), compare.unsigned_slice(bytes(changed)))
+
+    def test_fat_metadata_and_padding_are_not_discarded(self):
+        def fat(second_offset=256, first=None):
+            first = first or binary()
+            second = binary()
+            data = bytearray(second_offset + len(second))
+            struct.pack_into('>II', data, 0, 0xcafebabe, 2)
+            struct.pack_into('>iiIII', data, 8, 7, 3, 64, len(first), 4)
+            struct.pack_into('>iiIII', data, 28, 12, 0, second_offset, len(second), 4)
+            data[64:64 + len(first)] = first
+            data[second_offset:] = second
+            return bytes(data)
+        def normalized(data):
+            with tempfile.TemporaryDirectory() as root:
+                path = Path(root) / 'fat'
+                path.write_bytes(data)
+                return compare.unsigned_slices(path)
+        original = fat()
+        self.assertEqual(normalized(original), normalized(fat(272, binary(144, signature=b'resigned'))))
+        for position in (50, 220, 24):
+            changed = bytearray(original)
+            changed[position] ^= 1
+            self.assertNotEqual(normalized(original), normalized(bytes(changed)))
 
     def test_note_payload_outside_segments_is_retained(self):
         data = bytearray(272)

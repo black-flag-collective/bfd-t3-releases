@@ -106,11 +106,25 @@ def unsigned_slices(path):
     if order is None:
         return [unsigned_slice(data)]
     count = struct.unpack_from(order + 'I', data, 4)[0]
-    slices = []
+    slices = [(data[:4], count)]
+    ranges = []
+    header_end = 8 + 20 * count
+    if header_end > len(data):
+        return [data]
     for index in range(count):
         # Offsets and sizes move when slices are re-signed; architecture and alignment do not.
         cputype, subtype, offset, size, align = struct.unpack_from(order + 'iiIII', data, 8 + 20 * index)
+        if offset < header_end or offset + size > len(data):
+            return [data]
+        ranges.append((offset, offset + size))
         slices.append((cputype, subtype, align, unsigned_slice(data[offset:offset + size])))
+    cursor = header_end
+    for start, end in sorted(ranges):
+        # Re-signing can move aligned slices, but cannot add nonzero gap content.
+        if start < cursor or any(data[cursor:start]):
+            return [data]
+        cursor = end
+    slices.append(data[cursor:])
     return slices
 
 
