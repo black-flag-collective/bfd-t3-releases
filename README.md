@@ -52,7 +52,8 @@ decide where it sits, never who is looking:
 - **Later**: the app's snoozed shelf.
 
 A thread titled `Sweep · <what the last run did>` is the board's footer: one line, stuck to
-the bottom, showing when the sweep last ran. When that thread fails, runs out of usage, or is
+the bottom, showing when the sweep last ran. A sweep awaiting an approval, question or request
+appears in Needs a person instead, with its row and count. When that thread fails, runs out of usage, or is
 retitled `Sweep stopped · <reason>`, the line turns red and moves to the top. The
 reason is shown as written. Unsent drafts stay out of every group and count and
 sit after the open threads; a group heading past 30 threads reads `30+`.
