@@ -53,7 +53,9 @@ decide where it sits, never who is looking:
 
 A thread titled `Sweep · <what the last run did>` is the board's footer: one line, stuck to
 the bottom, showing when the sweep last ran. When that thread fails, runs out of usage, or is
-retitled `Sweep stopped · <reason>`, the line turns red and moves to the top.
+retitled `Sweep stopped · <reason>`, the line turns red and moves to the top. The
+reason is shown as written. Unsent drafts stay out of every group and count and
+sit after the open threads; a group heading past 30 threads reads `30+`.
 
 A title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
 that person as the one who asked. The top bar repeats the groups with counts. The phone app
