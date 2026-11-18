@@ -36,18 +36,29 @@ t3 theme set /tmp/bfd-agora.json
 
 Or import the file in **Settings → Appearance**.
 
-The sidebar is an update board, and a thread's title decides where it sits:
+The sidebar is an update board with five groups. A thread's title and the app's own status
+decide where it sits, never who is looking:
 
-- `NEEDS <NAME>: <exact action>` goes under **Needs a person**, with that person's picture.
-- `READ: <result>` goes under **To read**, with a **Got it** button that settles it.
-- Any other title goes under **Agents**: agents have it and no person has anything to do.
+- **Needs a person**: `NEEDS <NAME>: <exact action>` titles, and any thread with a pending
+  approval, question or request. Three parts, in this order:
+  - **Replies & outbox**: `NEEDS <NAME>: Reply to <person> — <subject>` and
+    `NEEDS <NAME>: Approve send — <audience>: <subject>` (also `Send reply to …`).
+  - **Answer in thread**: an agent asked something inside the thread and is stopped on it.
+  - **Other actions**: every other `NEEDS` title.
+- **To read**: `READ: <result>`, for finished work only, with a **Got it** button that settles it.
+- **Working**: a turn is running now.
+- **Picking back up**: every other open thread. The turn ended, it failed, or its model ran
+  out of usage. Agents have it; the row says which.
+- **Later**: the app's snoozed shelf.
 
-One exception to the title rule: a thread with a pending native approval, question or request
-also sits under **Needs a person**, because it is stopped until someone answers. Inside that
-group, `Approve send` and `Approve release` titles and pending native approvals come first.
+A thread titled `Sweep · <what the last run did>` is the board's footer: one line, stuck to
+the bottom, showing when the sweep last ran. A sweep awaiting an approval, question or request
+appears in Needs a person instead, with its row and count. When that thread fails, runs out of usage, or is
+retitled `Sweep stopped · <reason>`, the line turns red and moves to the top. The
+reason is shown as written. Unsent drafts stay out of every group and count and
+sit after the open threads; a group heading past 30 threads reads `30+`.
 
-Each row also shows who started it: a person, an agent, a delegate or a scheduled job. A
-title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
-that person as the one who asked. A `NEEDS` row always shows the person who has to act
-instead, whatever its ending. The top bar repeats the same three groups with counts.
+A title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
+that person as the one who asked. The top bar repeats the groups with counts. The phone app
+shows no theme, so the `NEEDS <NAME>:` and `READ:` prefixes are the whole signal there.
 Portraits are embedded in the theme, so a new teammate needs a portrait added to it.
