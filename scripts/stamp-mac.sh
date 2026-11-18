@@ -24,7 +24,8 @@ rm -rf "$app"
 ditto "$src" "$app"
 
 plist="$app/Contents/Info.plist"
-/usr/libexec/PlistBuddy -c "Set :CFBundleName $NAME" "$plist"
+# CFBundleName stays upstream's: Electron finds its helper apps as "<CFBundleName> Helper*.app"
+# and aborts at launch ("Unable to find helper app") when the name and the helpers disagree.
 /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $NAME" "$plist"
 /usr/libexec/PlistBuddy -c "Set :ElectronTeamID $TEAM_ID" "$plist"
 # An asset-catalog icon would win over icon.icns.

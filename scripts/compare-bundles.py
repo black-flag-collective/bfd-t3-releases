@@ -13,7 +13,8 @@ import plistlib
 import struct
 import sys
 
-STAMPED_PLIST_KEYS = {'CFBundleName', 'CFBundleDisplayName', 'ElectronTeamID', 'CFBundleIconName'}
+# CFBundleName must stay upstream's: Electron locates its helper apps by it.
+STAMPED_PLIST_KEYS = {'CFBundleDisplayName', 'ElectronTeamID', 'CFBundleIconName'}
 
 
 def files(root):
