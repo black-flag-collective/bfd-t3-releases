@@ -7,11 +7,13 @@ aside[data-thread-details-panel] [data-thread-automations-panel]:has(button[aria
     & > p, & p, & > span:first-child, & > [role="switch"] { display: none !important }
     & > button[aria-label^="Edit "] { opacity: 0; width: 0; overflow: hidden }
     &:is(:hover,:focus-within) > button[aria-label^="Edit "] { opacity: 1; width: auto }
-    & > button[aria-label^="Run "] { position: static }
-    & > button[aria-label^="Run "]::after { content: ""; position: absolute; inset: 0; cursor: pointer }
+    & > div > span::before { content:"Estimated "; font-weight:400 }
+    & > button[aria-label^="Run "] { width:auto; gap:3px; padding-inline:4px }
+    & > button[aria-label^="Run "]::after { content:"Run"; font-size:10px }
     & > button[aria-label^="Edit "] { position: relative; z-index: 1 }
   }
-  &:not(:has(li:not(:has(>button[aria-label^="Run "][aria-label*="% · "])))) > :first-child:not(:has(li)) { display: none }
+  /* Every native schedule, including webhooks, has an Edit control. */
+  &:not(:has(li > button[aria-label^="Edit "]:not([aria-label*="% · "]))) > div:has(> #thread-details-automations-heading) { display:none }
 }
 aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:has(> section[data-thread-automations-panel] button[aria-label*="% · "]) {
   display: flex; flex-direction: column;
@@ -44,10 +46,11 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
     font-size:12px; font-weight:650; color:var(--bfd-muted); border-left:1px solid var(--bfd-line);
   }
   [data-chat-header] div:has(> nav[aria-label="Thread breadcrumb"])::before {
-    content:var(--news-headline,counter(bfdneeds) " threads need a decision.");
+    /* The released base resets bfdneeds on body. Earlier sidebar rows increment that counter. */
+    content:var(--news-headline,"Threads needing a decision · " counter(bfdneeds));
     left:calc(var(--news-start) + var(--news-width)); right:var(--news-tail);
     padding-inline:15px; white-space:nowrap; overflow:hidden; font-size:15px; font-weight:550;
-    animation:news-cross 14s linear infinite;
+    display:flex; align-items:center; white-space:normal; line-height:1.25;
   }
   [data-slot="sidebar-wrapper"]:has([data-chat-header]:hover,[data-sidebar-row]:focus-visible),
   [data-slot="sidebar-wrapper"]:has([data-chat-header]:hover,[data-sidebar-row]:focus-visible)
@@ -74,9 +77,6 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
   [data-chat-header]:has(button:focus-visible)::after,
   [data-chat-header]:has(button:focus-visible) div:has(> nav)::before { visibility:hidden }
 }
-@keyframes news-cross {
-  from { text-indent:32% } to { text-indent:calc(-1 * var(--news-length,44ch)) }
-}
 @media(prefers-reduced-motion:reduce) {
   [data-slot="sidebar-wrapper"], [data-chat-header] div:has(> nav)::before { animation:none!important }
 }
@@ -96,13 +96,9 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
   }
   aside[data-thread-details-panel="inline"] [data-thread-details-card] { padding-top:50px }
 }
-@keyframes news-cross {
-  0% { text-indent:50% } 40%,75% { text-indent:0 } 100% { text-indent:-70ch }
-}
 [data-thread-automations-panel]:has(button[aria-label*="% · "]) ul {
   display:flex; flex-direction:column;
 }
-[data-thread-automations-panel]:not(:has(li:not(:has(button[aria-label*="% · "])))):has(button[aria-label*="% · "]) :is(h2,h3,h4) { display:none }
 /* Native automation titles carry the integer percentage at the start. */
 li:has(>button[aria-label^="Run 0"]){--tens:0}
 li:has(>button[aria-label*="0% · "]){--units:0}
@@ -147,7 +143,6 @@ li:has(>button[aria-label^="Run 100% · "]){order:-100}
     background-size:22px auto,var(--news-next-plate,0 0);
     background-position:12px center,10px center;
   }
-  [data-thread-automations-panel]:has(li button[aria-label*="% · "]):not(:has(li:not(:has(button[aria-label*="% · "])))) > div:has(+ div ul) { display:none!important }
 }
 @media(min-width:900px) {
   /* A native Electron drag region consumes clicks before DOM hit testing. */
@@ -170,5 +165,19 @@ li:has(>button[aria-label^="Run 100% · "]){order:-100}
   [data-chat-header] div:has(>nav[aria-label="Thread breadcrumb"])::before {
     background-image:linear-gradient(90deg,var(--bfd-gold) var(--news-chart,0%),var(--bfd-blue) 0);
     background-position:0 100%; background-size:100% var(--news-chart-h,0px); background-repeat:no-repeat;
+  }
+}
+/* Restart only when the story changes, even if an update interrupts a slot. */
+@keyframes news-story-a {
+  from { transform:translateX(22px); opacity:.35 }
+  to { transform:none; opacity:1 }
+}
+@keyframes news-story-b {
+  from { transform:translateX(22px); opacity:.35 }
+  to { transform:none; opacity:1 }
+}
+@media(min-width:900px) and (prefers-reduced-motion:no-preference) {
+  [data-chat-header] div:has(>nav[aria-label="Thread breadcrumb"])::before {
+    animation:var(--news-story-entry,none) .65s cubic-bezier(.16,1,.3,1) both;
   }
 }
