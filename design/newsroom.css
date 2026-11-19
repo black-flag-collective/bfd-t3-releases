@@ -149,3 +149,15 @@ li:has(>button[aria-label^="Run 100% · "]){order:-100}
   }
   [data-thread-automations-panel]:has(li button[aria-label*="% · "]):not(:has(li:not(:has(button[aria-label*="% · "])))) > div:has(+ div ul) { display:none!important }
 }
+@media(min-width:900px) {
+  /* A native Electron drag region consumes clicks before DOM hit testing. */
+  [data-chat-header], [data-chat-header] *, [data-chat-header]::before, [data-chat-header]::after {
+    -webkit-app-region:no-drag!important; app-region:no-drag!important;
+  }
+  [data-chat-header], [data-chat-header] > div { pointer-events:none }
+  [data-chat-header] :is(button,a,input,[role="button"]) { pointer-events:auto }
+  [data-sidebar-row]::after { pointer-events:auto; top:0 }
+  [data-slot="sidebar-wrapper"]:has([data-sidebar-row]:hover),
+  [data-slot="sidebar-wrapper"]:has([data-sidebar-row]:hover) [data-chat-header] div:has(> nav)::before { animation-play-state:paused }
+  [data-chat-header]::after { display:flex; align-items:center; justify-content:center; padding-left:30px; text-indent:0 }
+}

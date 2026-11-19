@@ -14,3 +14,5 @@ Finished work uses `UPDATE: <result>`; `READ:` has no special styling. Scheduled
 use a muted dot; Failed and Limited turn red without moving out of Automations.
 
 The top band groups stories by client. On desktop the current mark and short name stay at the left and the next client appears at the right. Selecting a story uses its mounted native thread row. Personal headlines are composed on each T3 server. The shared theme only contains presentation and a board-count fallback. Update and Working cards use the same two-line layout.
+
+The story link uses the server compositor in minion-keith, src/minion_keith/t3_newsroom.py. Its per-story keyframe sets an integer --news-slot on the sidebar wrapper. Its thread-id selector sets the matching --story-slot on the mounted native row (T3 prefixes thread IDs with the environment ID). The newsroom stylesheet compares them on the row pseudo-element. Plain release CSS displays an aggregate board count, which has no source thread. The native title bar must allow DOM hit testing and disable Electron window dragging over the headline.
