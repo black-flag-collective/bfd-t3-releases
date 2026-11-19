@@ -13,7 +13,10 @@
     & > button[aria-label^="Edit "] { position: relative; z-index: 1 }
   }
   /* Every native schedule, including webhooks, has an Edit control. */
-  &:not(:has(li > button[aria-label^="Edit "]:not([aria-label*="% · "]))) > div:has(> #thread-details-automations-heading) { display:none }
+  &:not(:has(li > button[aria-label^="Edit "]:not([aria-label*="% · "]))) {
+    & > div:has(> #thread-details-automations-heading) { display:none }
+    & ul:not(:has(> li:nth-child(4))) { max-height:none }
+  }
 }
 [data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:has(> section[data-thread-automations-panel] button[aria-label*="% · "]) {
   display: flex; flex-direction: column; reading-flow: flex-visual;
