@@ -97,6 +97,21 @@
 @media(prefers-reduced-motion:reduce) {
   [data-slot="sidebar-wrapper"], [data-chat-header] div:has(> nav)::before { animation:none!important }
 }
+@media(max-width:639px) {
+  nav[aria-label="Thread breadcrumb"]:has(li[aria-current] > span[data-slot="tooltip-trigger"]) {
+    margin-inline-end:12px;
+    & ol { display:grid; grid-template-columns:auto minmax(0,1fr); gap:0 6px }
+    & li[aria-hidden], & li:not([aria-current]):has(img,svg) [data-slot="workspace-breadcrumb-text"] { display:none }
+    & li[aria-current] { display:contents }
+    & button { min-height:24px; min-width:24px }
+    & li[aria-current] > button { grid-area:1/2 }
+    & li[aria-current] > span {
+      grid-column:1/-1; justify-self:start; max-width:100%; height:auto; max-height:28px;
+      display:block; white-space:normal; overflow:hidden; padding-block:1px; font-size:11px; line-height:12px;
+    }
+    & h2 span { padding-block:2px }
+  }
+}
 @media(min-width:900px) {
   [data-chat-header]::after {
     z-index:90; text-align:right; background-image:var(--news-next-mark,none);
