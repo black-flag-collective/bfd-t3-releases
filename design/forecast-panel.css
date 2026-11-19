@@ -1,0 +1,7 @@
+/* Before the list loads, T3 tries the editor, then the dialog. Tab from the dialog follows the visible controls. */
+@media(max-width:639px) {
+  :root:has([aria-label="Toggle thread details panel"][aria-expanded=true]:focus-visible)
+    [data-thread-details-panel=popover] :not(:hover) > [data-open-favorite-editor] {
+    interactivity:inert
+  }
+}
