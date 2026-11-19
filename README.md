@@ -1,28 +1,36 @@
 # BFD T3 releases
 
-This repository publishes the **team T3 theme**. Every Black Flag T3 Code install runs
-[`themes/bfd-agora.json`](themes/bfd-agora.json) from `main`. A merge to `main` is a theme
-release: the cloud computers pick it up on their own and desktops pick it up with one command.
+This repository publishes the [team T3 theme](themes/bfd-agora.json). A merge to
+`main` releases it. The enrolled computers fetch each release automatically and
+compose the ticker from the sessions available on that computer.
 
-The T3 app itself is **official T3 Code Nightly** from upstream
-([`pingdotgg/t3code`](https://github.com/pingdotgg/t3code)), unmodified. Nobody at Black Flag
-runs a fork or a rebuilt app.
+The team runs [official upstream T3 Code Nightly](https://github.com/pingdotgg/t3code).
 
 ## Who runs this theme
 
-| Where | T3 app | How the theme arrives |
-| --- | --- | --- |
-| Personal cloud computers (`bfd-t3-<person>` on Fly) and client Minions | Upstream T3 Code Nightly, kept current by the [keeper](https://github.com/black-flag-collective/minion-keith/blob/main/config/team-computers/t3_keeper.py) | The keeper downloads this file from `main` and runs `t3 theme set` whenever it changes. The web app those computers serve shows it. |
-| A desktop Mac | `T3 Code (Nightly).app` from upstream | The desktop shows the theme of the T3 server on the same Mac, not of a computer it is linked to. Run the commands below once per change, or import the file in **Settings → Appearance**. |
-| The T3 phone app | Upstream | The native thread list displays the saved title. `NEEDS <NAME>:` identifies a human action, `UPDATE:` a finished result, and `AUTOMATION:` a scheduled job. These labels remain readable without the desktop theme. |
+| Where | How the theme arrives |
+| --- | --- |
+| Keith’s Pro, Air and Keith Cloud | Minion’s scheduled upkeep downloads the release, composes local stories and selects it with `t3 theme set`. Each Mac’s Nightly window uses its own T3 server. |
+| Teammate cloud computers and client Minion images | The [keeper](https://github.com/black-flag-collective/minion-keith/blob/main/config/team-computers/t3_keeper.py) checks the configured theme URL on its regular interval. The web app served by that computer uses its theme. |
+| Central hosted web app at `app.t3.codes` | Its browser profile stores its own appearance. To show a server’s current rundown, import that server’s installed `bfd-agora.json` in **Settings → Appearance** and choose **Update existing** when prompted. |
+| Native T3 phone app | The native list shows the saved thread title. `NEEDS <NAME>:` identifies a human action, `UPDATE:` a finished result and `AUTOMATION:` a scheduled job. |
 
-```sh
-curl -fsSL -o /tmp/bfd-agora.json https://raw.githubusercontent.com/black-flag-collective/bfd-t3-releases/main/themes/bfd-agora.json
-t3 theme set /tmp/bfd-agora.json
-```
+Run `t3 theme show` on the server to check that it selected `bfd-agora`. The installed
+file is `userdata/themes/bfd-agora.json` under `T3CODE_HOME`, which defaults to
+`~/.t3`. The ticker can give two machines different file hashes on the same release.
 
-To check a computer, run `t3 theme show`. It should name `bfd-agora`, and the installed file's
-`css` should match the one on `main`.
+On the Pro, Air and Keith Cloud, `~/.local/state/minion-computer/t3-theme/applied.json`
+records two SHA-256 hashes. Compare `releaseSha256` with the downloaded file on
+`main` and `sha256` with the installed file. The teammate keeper records its installed
+content hash in `runtime/keeper/theme` under `T3CODE_HOME`.
+
+## Reading the forecasts
+
+When a session has forecasts, its thread details show three next likely actions
+ordered by their estimated likelihood. The percentages assume the next request is one of
+the three suggestions. Opening the panel on a phone gives the full session title
+its own line above the suggestions. A linked session can also show which computer
+it came from.
 
 ## Why it is called "releases"
 

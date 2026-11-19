@@ -18,7 +18,7 @@
     & ul:not(:has(> li:nth-child(4))) { max-height:none }
     & ul:has(>li:nth-child(3):last-child):not(:has(>li>[role="switch"][aria-checked="true"]))::after {
       content:"Odds assume the next request is one of these three.";
-      order:1; margin:4px; color:var(--bfd-muted); font-size:11px; line-height:1.4;
+      order:1; margin:4px; color:var(--foreground); font-size:12px; line-height:1.4;
     }
   }
 }
@@ -113,6 +113,19 @@
       display:block; white-space:normal; overflow:hidden; padding-block:1px; font-size:11px; line-height:12px;
     }
     & h2 span { padding-block:2px }
+  }
+  /* The native title lives in the thread-actions button. Its sibling span identifies the source computer. */
+  [data-chat-header]:has([aria-label="Toggle thread details panel"][aria-expanded=true]) {
+    height:auto; min-height:var(--workspace-topbar-height); padding-block:0 6px;
+    & div:has(>nav[aria-label="Thread breadcrumb"]) { padding-inline-end:0 }
+    & nav[aria-label="Thread breadcrumb"] {
+      margin-inline-end:0; width:100%;
+      & ol, & li[aria-current] { display:grid; grid-template-columns:minmax(0,1fr); gap:0 }
+      & li[aria-hidden] { display:none }
+      & li:not([aria-current],[aria-hidden]) { min-height:var(--workspace-topbar-height); padding-inline-end:94px }
+      & li[aria-current] > button { grid-area:auto }
+      & h2 span { white-space:normal; overflow-wrap:anywhere; line-height:1.2; padding-block:1px }
+    }
   }
 }
 @media(min-width:900px) {
