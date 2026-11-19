@@ -2,9 +2,8 @@ name: Stamp upstream nightly
 
 # Each upstream T3 Code nightly becomes a BFD Agora nightly: upstream's own signed app with only the
 # name, icon and update feed changed, re-signed by Black Flag. Nothing here builds T3 from source.
+# The team runs official T3 Code Nightly, so this runs only when started by hand.
 on:
-  schedule:
-    - cron: "41 */3 * * *"
   workflow_dispatch:
     inputs:
       version:

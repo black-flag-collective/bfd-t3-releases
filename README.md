@@ -1,64 +1,60 @@
-# BFD Agora releases
+# BFD T3 releases
 
-**BFD Agora** is upstream [T3 Code](https://github.com/pingdotgg/t3code) Nightly with
-three things changed: the app name, the icon and the update feed. Every other file is
-upstream's own, and the app is re-signed with Black Flag's Developer ID. There is no
-fork of the source. Its server is upstream's, so the T3 mobile app and linked machines
-work with it exactly as they do with upstream T3 Code.
+This repository publishes the **team T3 theme**. Every Black Flag T3 Code install runs
+[`themes/bfd-agora.json`](themes/bfd-agora.json) from `main`. A merge to `main` is a theme
+release: the cloud computers pick it up on their own and desktops pick it up with one command.
 
-- **Mac:** download the `.dmg` for your chip (`arm64` for Apple Silicon) from the newest
-  release in [Releases](https://github.com/black-flag-collective/bfd-t3-releases/releases).
-  BFD Agora then updates itself from this feed.
+The T3 app itself is **official T3 Code Nightly** from upstream
+([`pingdotgg/t3code`](https://github.com/pingdotgg/t3code)), unmodified. Nobody at Black Flag
+runs a fork or a rebuilt app.
 
-Until notarization is enabled, a release's notes say so. For a first install, run
-`xattr -dr com.apple.quarantine "/Applications/BFD Agora.app"` once; updates install normally.
+## Who runs this theme
 
-## How a release is made
-
-[`stamp-nightly`](.github/workflows/stamp-nightly.yml) checks upstream every three hours.
-For each new nightly it verifies upstream's files against upstream's checksums, stamps
-and re-signs the app ([`scripts/stamp-mac.sh`](scripts/stamp-mac.sh)), and confirms that
-every other file still matches upstream ([`scripts/compare-bundles.py`](scripts/compare-bundles.py)).
-It also starts the stamped app and upstream's CLI of the same version, and refuses to publish
-unless both servers report the same version, orchestration protocol and database schema
-([`scripts/check-server.sh`](scripts/check-server.sh)). Notarization runs once Apple accepts
-the team's key ([`scripts/check-apple-notary.mjs`](scripts/check-apple-notary.mjs)).
-
-## The Agora theme
-
-[`themes/bfd-agora.json`](themes/bfd-agora.json) is the team's T3 theme. Team cloud
-computers apply it by themselves whenever this file changes. On a desktop, run:
+| Where | T3 app | How the theme arrives |
+| --- | --- | --- |
+| Personal cloud computers (`bfd-t3-<person>` on Fly) and client Minions | Upstream T3 Code Nightly, kept current by the [keeper](https://github.com/black-flag-collective/minion-keith/blob/main/config/team-computers/t3_keeper.py) | The keeper downloads this file from `main` and runs `t3 theme set` whenever it changes. The web app those computers serve shows it. |
+| A desktop Mac | `T3 Code (Nightly).app` from upstream | The desktop shows the theme of the T3 server on the same Mac, not of a computer it is linked to. Run the commands below once per change, or import the file in **Settings → Appearance**. |
+| The T3 phone app | Upstream | Phones show no theme. The `NEEDS <NAME>:` and `READ:` title prefixes are the whole signal there. |
 
 ```sh
 curl -fsSL -o /tmp/bfd-agora.json https://raw.githubusercontent.com/black-flag-collective/bfd-t3-releases/main/themes/bfd-agora.json
 t3 theme set /tmp/bfd-agora.json
 ```
 
-Or import the file in **Settings → Appearance**.
+To check a computer, run `t3 theme show`. It should name `bfd-agora`, and the installed file's
+`css` should match the one on `main`.
 
-The sidebar is an update board with five groups. A thread's title and the app's own status
-decide where it sits, never who is looking:
+## Why it is called "releases"
 
-- **Needs a person**: `NEEDS <NAME>: <exact action>` titles, and any thread with a pending
-  approval, question or request. Three parts, in this order:
-  - **Replies & outbox**: `NEEDS <NAME>: Reply to <person> — <subject>` and
-    `NEEDS <NAME>: Approve send — <audience>: <subject>` (also `Send reply to …`).
-  - **Answer in thread**: an agent asked something inside the thread and is stopped on it.
-  - **Other actions**: every other `NEEDS` title.
-- **To read**: `READ: <result>`, for finished work only, with a **Got it** button that settles it.
+The repository was created to publish **BFD Agora**, a re-signed copy of each upstream nightly
+with Black Flag's name and icon, as GitHub Releases. The team moved to official T3 Code
+Nightly instead, so those builds have no users and the scheduled stamping is off. The
+[`stamp-nightly`](.github/workflows/stamp-nightly.yml) workflow and its scripts remain for a
+manual run, and the old builds remain under
+[Releases](https://github.com/black-flag-collective/bfd-t3-releases/releases). Don't install
+them. The theme kept the repository's name because every computer already fetches it from this URL.
+
+## The sidebar
+
+The sidebar is an update board. A thread's title and the app's own status decide where it sits,
+never who is looking:
+
+- **Needs Keith** or **Needs action**: `NEEDS <NAME>: <exact action>` titles, and any thread
+  stopped on an approval, question or request. The heading says **Needs Keith** when every row
+  names Keith, and **Needs action** for anyone else or a mix. Replies and send approvals
+  (`NEEDS <NAME>: Reply to <person> — <subject>`, `NEEDS <NAME>: Approve send — <audience>: <subject>`)
+  lead the group.
+- **Updates**: `READ: <result>`, finished work a person should know about. The native checkmark
+  appears on hover or keyboard focus and settles the thread.
 - **Working**: a turn is running now.
-- **Picking back up**: every other open thread. The turn ended, it failed, or its model ran
-  out of usage. Agents have it; the row says which.
+- **Open threads**: every other open thread. Agents have it; a failed or out-of-usage row says so.
 - **Later**: the app's snoozed shelf.
 
-A thread titled `Sweep · <what the last run did>` is the board's footer: one line, stuck to
-the bottom, showing when the sweep last ran. A sweep awaiting an approval, question or request
-appears in Needs a person instead, with its row and count. When that thread fails, runs out of usage, or is
-retitled `Sweep stopped · <reason>`, the line turns red and moves to the top. The
-reason is shown as written. Unsent drafts stay out of every group and count and
-sit after the open threads; a group heading past 30 threads reads `30+`.
+A thread titled `Sweep · <what the last run did>` is the board's footer: one line, stuck to the
+bottom, showing when the sweep last ran. When that thread fails, runs out of usage, or is
+retitled `Sweep stopped · <reason>`, the line turns red and moves to the top. Unsent drafts stay
+out of every group and count.
 
 A title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
-that person as the one who asked. The top bar repeats the groups with counts. The phone app
-shows no theme, so the `NEEDS <NAME>:` and `READ:` prefixes are the whole signal there.
+that person as the one who asked.
 Portraits are embedded in the theme, so a new teammate needs a portrait added to it.
