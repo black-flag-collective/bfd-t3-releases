@@ -14,7 +14,7 @@ runs a fork or a rebuilt app.
 | --- | --- | --- |
 | Personal cloud computers (`bfd-t3-<person>` on Fly) and client Minions | Upstream T3 Code Nightly, kept current by the [keeper](https://github.com/black-flag-collective/minion-keith/blob/main/config/team-computers/t3_keeper.py) | The keeper downloads this file from `main` and runs `t3 theme set` whenever it changes. The web app those computers serve shows it. |
 | A desktop Mac | `T3 Code (Nightly).app` from upstream | The desktop shows the theme of the T3 server on the same Mac, not of a computer it is linked to. Run the commands below once per change, or import the file in **Settings → Appearance**. |
-| The T3 phone app | Upstream | Phones show no theme. The `NEEDS <NAME>:` and `READ:` title prefixes are the whole signal there. |
+| The T3 phone app | Upstream | The native thread list displays the saved title. `NEEDS <NAME>:` identifies a human action, `UPDATE:` a finished result, and `AUTOMATION:` a scheduled job. These labels remain readable without the desktop theme. |
 
 ```sh
 curl -fsSL -o /tmp/bfd-agora.json https://raw.githubusercontent.com/black-flag-collective/bfd-t3-releases/main/themes/bfd-agora.json
@@ -44,17 +44,18 @@ never who is looking:
   names Keith, and **Needs action** for anyone else or a mix. Replies and send approvals
   (`NEEDS <NAME>: Reply to <person> — <subject>`, `NEEDS <NAME>: Approve send — <audience>: <subject>`)
   lead the group.
-- **Updates**: `READ: <result>`, finished work a person should know about. The native checkmark
+- **Updates**: `UPDATE: <result>`, finished work a person should know about. The native checkmark
   appears on hover or keyboard focus and settles the thread.
 - **Working**: a turn is running now.
+- **Automations**: `AUTOMATION: <plain name>` scheduled jobs, in compact one-line rows.
+  Failed or limited runs turn red and stay in this group.
 - **Open threads**: every other open thread. Agents have it; a failed or out-of-usage row says so.
 - **Later**: the app's snoozed shelf.
 
-A thread titled `Sweep · <what the last run did>` is the board's footer: one line, stuck to the
-bottom, showing when the sweep last ran. When that thread fails, runs out of usage, or is
-retitled `Sweep stopped · <reason>`, the line turns red and moves to the top. Unsent drafts stay
-out of every group and count.
+Scheduled jobs settle their own thread at the end of each run. Automations are a normal
+section below Working, not a sticky footer; they stay out of the ticker. Unsent drafts
+stay out of every group and count.
 
-A title that ends with a middle dot and a first name, as in `READ: Invite sent · Eli`, shows
+A title that ends with a middle dot and a first name, as in `UPDATE: Invite sent · Eli`, shows
 that person as the one who asked.
 Portraits are embedded in the theme, so a new teammate needs a portrait added to it.
