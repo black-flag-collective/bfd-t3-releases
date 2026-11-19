@@ -114,7 +114,7 @@
     }
     & h2 span { padding-block:2px }
   }
-  /* Keep the actual session name above the open forecast panel. */
+  /* The native title lives in the thread-actions button. Its sibling span identifies the source computer. */
   [data-chat-header]:has([aria-label="Toggle thread details panel"][aria-expanded=true]) {
     height:auto; min-height:var(--workspace-topbar-height); padding-block:0 6px;
     & div:has(>nav[aria-label="Thread breadcrumb"]) { padding-inline-end:0 }
