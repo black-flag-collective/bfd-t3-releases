@@ -1,5 +1,19 @@
 /* Before the list loads, T3 tries the editor, then the dialog. Tab from the dialog follows the visible controls. */
 @media(max-width:639px) {
+  /* The accessible name also keeps the visible label in the same language. */
+  [data-chat-header]:has([aria-label="Toggle thread details panel"]) {
+    & [data-thread-panel-toggle] button {
+      gap:.3rem;
+      &::before { content:"Details"; position:static; order:1; font-size:.75rem }
+    }
+    & nav li:first-child:has([data-slot=workspace-breadcrumb-text]) { padding-inline-end:9.5rem!important }
+    & [data-slot=workspace-breadcrumb-text] {
+      display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+      overflow:hidden; white-space:normal; overflow-wrap:anywhere; line-height:1.2;
+      & > span { display:contents; white-space:inherit }
+      & > span::before { content:none }
+    }
+  }
   :root:has([aria-label="Toggle thread details panel"][aria-expanded=true]:focus-visible)
     [data-thread-details-panel=popover] :not(:hover) > [data-open-favorite-editor] {
     interactivity:inert
