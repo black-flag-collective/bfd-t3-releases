@@ -110,7 +110,7 @@
       & ol, & li[aria-current] { display:grid; grid-template-columns:minmax(0,1fr); gap:0 }
       & li[aria-hidden] { display:none }
       & li:not([aria-current],[aria-hidden]) { min-height:var(--workspace-topbar-height); padding-inline-end:94px }
-      & li[aria-current]:has(>span[data-slot="tooltip-trigger"]) > button { min-height:24px; min-width:24px }
+      & button { min-height:24px; min-width:24px }
       & li[aria-current] > span[data-slot="tooltip-trigger"] {
         justify-self:start; max-width:100%; height:auto; max-height:28px;
         display:block; white-space:normal; overflow:hidden; padding-block:1px; font-size:11px; line-height:12px;
