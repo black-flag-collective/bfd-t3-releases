@@ -77,11 +77,19 @@
     position:absolute; top:100%; left:14px; z-index:12; max-width:70%;
     background:var(--bfd-paper); border-radius:4px;
   }
-  :root:has(aside[data-thread-details-panel="inline"]) nav[aria-label="Thread breadcrumb"] {
-    position:fixed; top:68px; right:28px; left:auto; width:244px; z-index:30; font-weight:650;
+  :root:has(aside[data-thread-details-panel="inline"]) {
+    &:has(nav[aria-label="Thread breadcrumb"] li:last-child > span[data-slot="tooltip-trigger"]) { --bfd-title-room:70px }
+    & nav[aria-label="Thread breadcrumb"] {
+      position:fixed; top:68px; right:28px; left:auto; width:244px; z-index:30; font-weight:650;
+      max-height:calc(var(--bfd-title-room,50px) - 10px); overflow-y:auto; scrollbar-width:thin;
+      & li:not(:last-child) { display:none }
+      & li:last-child:has(> span[data-slot="tooltip-trigger"]) {
+        display:grid; grid-template-columns:minmax(0,1fr); justify-items:start; gap:2px;
+        & > span { max-width:100%; overflow:hidden; text-overflow:ellipsis }
+      }
+    }
+    & aside[data-thread-details-panel="inline"] [data-thread-details-card] { padding-top:var(--bfd-title-room,50px) }
   }
-  :root:has(aside[data-thread-details-panel="inline"]) nav[aria-label="Thread breadcrumb"] li:not(:last-child) { display:none }
-  aside[data-thread-details-panel="inline"] [data-thread-details-card] { padding-top:36px }
   [data-chat-header]:has(button:focus-visible)::before,
   [data-chat-header]:has(button:focus-visible)::after,
   [data-chat-header]:has(button:focus-visible) div:has(> nav)::before { visibility:hidden }
@@ -103,7 +111,6 @@
   :root:has(aside[data-thread-details-panel="inline"]) nav[aria-label="Thread breadcrumb"] li:last-child button {
     height:auto; white-space:normal; text-align:left;
   }
-  aside[data-thread-details-panel="inline"] [data-thread-details-card] { padding-top:50px }
 }
 [data-thread-automations-panel]:has(button[aria-label*="% · "]) ul {
   display:flex; flex-direction:column; reading-flow:flex-visual;
