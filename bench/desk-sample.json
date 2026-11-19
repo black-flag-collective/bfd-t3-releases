@@ -1,0 +1,5 @@
+{"sample": {"verdict": "ON TRACK", "summary": "Three template PRs are green and waiting on review; fleet CI is fixed on main.", "scored": "scored 14:32",
+ "scores": {"progress": 8, "momentum": 7, "clarity": 9, "risk": 3, "on_you": 1},
+ "asks": [{"ask": "Merge #208 when the reviewer approves", "why": "It is the last template PR still open", "p": 58},
+          {"ask": "Rerun Sonar on #91 after the rebase", "why": "Checks are 11 of 17; the rest are stale", "p": 27},
+          {"ask": "Write up what changed in fleet CI", "why": "Three teams hit the same failure this week", "p": 15}]}}
