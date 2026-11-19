@@ -18,3 +18,13 @@ The top band groups stories by client. On desktop the current mark and short nam
 The story link uses the server compositor in minion-keith, src/minion_keith/t3_newsroom.py. Its per-story keyframe sets an integer --news-slot on the sidebar wrapper. Its thread-id selector sets the matching --story-slot on the mounted native row (T3 prefixes thread IDs with the environment ID). The newsroom stylesheet compares them on the row pseudo-element. Plain release CSS displays an aggregate board count, which has no source thread. The native title bar must allow DOM hit testing and disable Electron window dragging over the headline.
 
 PowerAdvice uses its white SpiroMark on a violet tile at small sizes. The 32-pixel image embedded in the theme comes from the [PowerAdvice Ops icon](https://github.com/black-flag-collective/poweradvice-slackbot/blob/ff618d026b0552cd2fa1bfe7c55249bc345e0b82/assets/poweradvice-slack-icon.svg). The current and upcoming broadcast slots display it at 26 pixels.
+
+The broadcast is enclosed from the left edge of its client plate, 18 pixels after
+the Agora wordmark, through the upcoming-client slot. Its 148-pixel plate is fixed
+across client and person labels. A 420 ms badge arrival marks a client change; a
+480 ms horizontal shutter reveals each new headline inside its lane. Borders and
+backgrounds never translate. Headlines then hold for the compositor's reading slot.
+Hover pauses the rundown and gives the native source hit target a subtle tint;
+keyboard focus and pressed feedback remain visible. Reduced motion holds the
+first story with no plate or headline movement. The desktop band is absent below
+900 pixels. The gold enclosure is intentional broadcast framing.
