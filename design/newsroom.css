@@ -101,21 +101,8 @@
   [data-composer-banner-layout="wrap-actions"] [data-slot="composer-banner-content"] .truncate.font-medium {
     align-self:center; white-space:normal; overflow-wrap:anywhere; line-height:1.35;
   }
-  nav[aria-label="Thread breadcrumb"]:has(li[aria-current] > span[data-slot="tooltip-trigger"]) {
-    margin-inline-end:12px;
-    & ol { display:grid; grid-template-columns:auto minmax(0,1fr); gap:0 6px }
-    & li[aria-hidden], & li:not([aria-current]):has(img,svg) [data-slot="workspace-breadcrumb-text"] { display:none }
-    & li[aria-current] { display:contents }
-    & button { min-height:24px; min-width:24px }
-    & li[aria-current] > button { grid-area:1/2 }
-    & li[aria-current] > span {
-      grid-column:1/-1; justify-self:start; max-width:100%; height:auto; max-height:28px;
-      display:block; white-space:normal; overflow:hidden; padding-block:1px; font-size:11px; line-height:12px;
-    }
-    & h2 span { padding-block:2px }
-  }
   /* The native title lives in the thread-actions button. Its sibling span identifies the source computer. */
-  [data-chat-header]:has([aria-label="Toggle thread details panel"][aria-expanded=true]) {
+  [data-chat-header]:has(nav li[aria-current] > button h2) {
     height:auto; min-height:var(--workspace-topbar-height); padding-block:0 6px;
     & div:has(>nav[aria-label="Thread breadcrumb"]) { padding-inline-end:0 }
     & nav[aria-label="Thread breadcrumb"] {
@@ -123,7 +110,11 @@
       & ol, & li[aria-current] { display:grid; grid-template-columns:minmax(0,1fr); gap:0 }
       & li[aria-hidden] { display:none }
       & li:not([aria-current],[aria-hidden]) { min-height:var(--workspace-topbar-height); padding-inline-end:94px }
-      & li[aria-current] > button { grid-area:auto }
+      & li[aria-current]:has(>span[data-slot="tooltip-trigger"]) > button { min-height:24px; min-width:24px }
+      & li[aria-current] > span[data-slot="tooltip-trigger"] {
+        justify-self:start; max-width:100%; height:auto; max-height:28px;
+        display:block; white-space:normal; overflow:hidden; padding-block:1px; font-size:11px; line-height:12px;
+      }
       & h2 span { white-space:normal; overflow-wrap:anywhere; line-height:1.2; padding-block:1px }
     }
   }
