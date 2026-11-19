@@ -98,6 +98,9 @@
   [data-slot="sidebar-wrapper"], [data-chat-header] div:has(> nav)::before { animation:none!important }
 }
 @media(max-width:639px) {
+  [data-composer-banner-layout="wrap-actions"] [data-slot="composer-banner-content"] .truncate.font-medium {
+    align-self:center; white-space:normal; overflow-wrap:anywhere; line-height:1.35;
+  }
   nav[aria-label="Thread breadcrumb"]:has(li[aria-current] > span[data-slot="tooltip-trigger"]) {
     margin-inline-end:12px;
     & ol { display:grid; grid-template-columns:auto minmax(0,1fr); gap:0 6px }
