@@ -1,12 +1,12 @@
-/* Keep the native action buttons, labels and focus order. Ordinary schedules keep their controls. */
-aside[data-thread-details-panel] [data-thread-automations-panel]:has(button[aria-label^="Run "][aria-label*="% · "]) {
+/* Keep native actions and labels. Keyboard navigation follows their on-screen order. */
+[data-thread-details-panel] [data-thread-automations-panel]:has(button[aria-label^="Run "][aria-label*="% · "]) {
   & li:has(>button[aria-label^="Run "][aria-label*="% · "]) {
     position: relative; padding: 10px 4px !important; gap: 6px; align-items: start;
     & > div { flex: 1; min-width: 0 }
     & > div > span { white-space: normal !important; line-height: 1.4; overflow: visible !important }
     & > p, & p, & > span:first-child, & > [role="switch"] { display: none !important }
-    & > button[aria-label^="Edit "] { opacity: 0; width: 0; overflow: hidden }
-    &:is(:hover,:focus-within) > button[aria-label^="Edit "] { opacity: 1; width: auto }
+    & > button[aria-label^="Edit "] { opacity: 0; flex: 0 0 24px; overflow: hidden }
+    &:is(:hover,:focus-within) > button[aria-label^="Edit "] { opacity: 1 }
     & > div > span::before { content:"Estimated "; font-weight:400 }
     & > button[aria-label^="Run "] { width:auto; gap:3px; padding-inline:4px }
     & > button[aria-label^="Run "]::after { content:"Run"; font-size:10px }
@@ -15,8 +15,8 @@ aside[data-thread-details-panel] [data-thread-automations-panel]:has(button[aria
   /* Every native schedule, including webhooks, has an Edit control. */
   &:not(:has(li > button[aria-label^="Edit "]:not([aria-label*="% · "]))) > div:has(> #thread-details-automations-heading) { display:none }
 }
-aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:has(> section[data-thread-automations-panel] button[aria-label*="% · "]) {
-  display: flex; flex-direction: column;
+[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:has(> section[data-thread-automations-panel] button[aria-label*="% · "]) {
+  display: flex; flex-direction: column; reading-flow: flex-visual;
   & > section[data-thread-automations-panel] { order: -1 }
 }
 @property --news-diff { syntax:"<integer>"; inherits:false; initial-value:-1 }
@@ -99,7 +99,7 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
   aside[data-thread-details-panel="inline"] [data-thread-details-card] { padding-top:50px }
 }
 [data-thread-automations-panel]:has(button[aria-label*="% · "]) ul {
-  display:flex; flex-direction:column;
+  display:flex; flex-direction:column; reading-flow:flex-visual;
 }
 /* Native automation titles carry the integer percentage at the start. */
 li:has(>button[aria-label^="Run 0"]){--tens:0}
