@@ -16,6 +16,10 @@
   &:not(:has(li > button[aria-label^="Edit "]:not([aria-label*="% · "]))) {
     & > div:has(> #thread-details-automations-heading) { display:none }
     & ul:not(:has(> li:nth-child(4))) { max-height:none }
+    & ul:has(>li:nth-child(3):last-child):not(:has(>li>[role="switch"][aria-checked="true"]))::after {
+      content:"Odds assume the next request is one of these three.";
+      order:1; margin:4px; color:var(--bfd-muted); font-size:11px; line-height:1.4;
+    }
   }
 }
 [data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:has(> section[data-thread-automations-panel] button[aria-label*="% · "]) {
@@ -126,16 +130,7 @@ li:has(>button[aria-label*="8% · "]){--units:8}
 li:has(>button[aria-label^="Run 9"]){--tens:9}
 li:has(>button[aria-label*="9% · "]){--units:9}
 li:has(>button[aria-label*="% · "]){order:calc(-10 * var(--tens,0) - var(--units,0))}
-li:has(>button[aria-label^="Run 0% · "]){--tens:0}
-li:has(>button[aria-label^="Run 1% · "]){--tens:0}
-li:has(>button[aria-label^="Run 2% · "]){--tens:0}
-li:has(>button[aria-label^="Run 3% · "]){--tens:0}
-li:has(>button[aria-label^="Run 4% · "]){--tens:0}
-li:has(>button[aria-label^="Run 5% · "]){--tens:0}
-li:has(>button[aria-label^="Run 6% · "]){--tens:0}
-li:has(>button[aria-label^="Run 7% · "]){--tens:0}
-li:has(>button[aria-label^="Run 8% · "]){--tens:0}
-li:has(>button[aria-label^="Run 9% · "]){--tens:0}
+li:has(>button:is([aria-label^="Run 0% · "],[aria-label^="Run 1% · "],[aria-label^="Run 2% · "],[aria-label^="Run 3% · "],[aria-label^="Run 4% · "],[aria-label^="Run 5% · "],[aria-label^="Run 6% · "],[aria-label^="Run 7% · "],[aria-label^="Run 8% · "],[aria-label^="Run 9% · "])){--tens:0}
 li:has(>button[aria-label^="Run 100% · "]){order:-100}
 @media(min-width:900px) {
   [data-chat-header]::before {
