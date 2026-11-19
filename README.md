@@ -44,7 +44,7 @@ never who is looking:
   names Keith, and **Needs action** for anyone else or a mix. Replies and send approvals
   (`NEEDS <NAME>: Reply to <person> — <subject>`, `NEEDS <NAME>: Approve send — <audience>: <subject>`)
   lead the group.
-- **Updates**: `READ: <result>`, finished work a person should know about. The native checkmark
+- **Read**: `READ: <result>`, finished work a person should know about. The native checkmark
   appears on hover or keyboard focus and settles the thread.
 - **Working**: a turn is running now.
 - **Open threads**: every other open thread. Agents have it; a failed or out-of-usage row says so.
