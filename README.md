@@ -14,7 +14,7 @@ runs a fork or a rebuilt app.
 | --- | --- | --- |
 | Personal cloud computers (`bfd-t3-<person>` on Fly) and client Minions | Upstream T3 Code Nightly, kept current by the [keeper](https://github.com/black-flag-collective/minion-keith/blob/main/config/team-computers/t3_keeper.py) | The keeper downloads this file from `main` and runs `t3 theme set` whenever it changes. The web app those computers serve shows it. |
 | A desktop Mac | `T3 Code (Nightly).app` from upstream | The desktop shows the theme of the T3 server on the same Mac, not of a computer it is linked to. Run the commands below once per change, or import the file in **Settings → Appearance**. |
-| The T3 phone app | Upstream | Phones show no theme. The `NEEDS <NAME>:` and `READ:` title prefixes are the whole signal there. |
+| The T3 phone app | Upstream | The native thread list displays the saved title. `NEEDS <NAME>:` identifies a human action, `UPDATE:` a finished result, and `AUTOMATION:` a scheduled job. These labels remain readable without the desktop theme. |
 
 ```sh
 curl -fsSL -o /tmp/bfd-agora.json https://raw.githubusercontent.com/black-flag-collective/bfd-t3-releases/main/themes/bfd-agora.json
