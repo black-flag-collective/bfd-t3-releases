@@ -26,6 +26,7 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
   [data-slot="sidebar-wrapper"] {
     --news-start:calc(anchor(--news-home right,180px) + 18px);
     --news-width:90px;
+    --news-plate-width:calc(var(--news-width) + 1rem);
     --news-tail:clamp(105px,12vw,170px);
   }
   [data-chat-header]::before,[data-chat-header]::after,
@@ -36,9 +37,9 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
     color:var(--bfd-ink); background-color:var(--bfd-paper);
   }
   [data-chat-header]::before {
-    content:var(--news-code,"BFD"); left:var(--news-start); width:var(--news-width);
+    content:var(--news-code,"BFD"); left:var(--news-start); width:var(--news-plate-width);
     background-image:var(--news-mark,var(--bfd-wm)); background-size:22px auto;
-    background-position:8px center; background-repeat:no-repeat; padding-left:38px;
+    background-position:8px center; background-repeat:no-repeat; padding-left:38px; white-space:nowrap;
     border-right:2px solid var(--bfd-gold); font-weight:750; font-size:13px;
   }
   [data-chat-header]::after {
@@ -48,7 +49,7 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
   [data-chat-header] div:has(> nav[aria-label="Thread breadcrumb"])::before {
     /* The released base resets bfdneeds on body. Earlier sidebar rows increment that counter. */
     content:var(--news-headline,"Threads needing a decision · " counter(bfdneeds));
-    left:calc(var(--news-start) + var(--news-width)); right:var(--news-tail);
+    left:calc(var(--news-start) + var(--news-plate-width)); right:var(--news-tail);
     padding-inline:15px; white-space:nowrap; overflow:hidden; font-size:15px; font-weight:550;
     display:flex; align-items:center; white-space:normal; line-height:1.25;
   }
@@ -60,7 +61,7 @@ aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:
     --news-diff:calc(var(--news-slot,-10) - var(--story-slot,-20));
     content:""; visibility:if(style(--news-diff:0):visible;else:hidden);
     position:fixed; z-index:46; top:anchor(--news-header top,-200px);
-    left:calc(var(--news-start) + var(--news-width)); right:var(--news-tail);
+    left:calc(var(--news-start) + var(--news-plate-width)); right:var(--news-tail);
     height:var(--workspace-topbar-height,52px); cursor:pointer; -webkit-app-region:no-drag;
   }
   [data-sidebar-row]:not(:hover,:focus-within) button[aria-label="Unpin thread"] { opacity:0 }
