@@ -1,0 +1,32 @@
+name: Theme check
+
+# T3 refuses a theme whose CSS is longer than 50,000 characters, so a release over that
+# limit installs nowhere. Catch it before merge.
+on:
+  pull_request:
+    paths: [themes/**]
+  push:
+    branches: [main]
+    paths: [themes/**]
+
+permissions:
+  contents: read
+
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Theme CSS fits T3's limit
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          bad = False
+          for path in sorted(pathlib.Path("themes").glob("*.json")):
+              css = json.loads(path.read_text()).get("css", "")
+              print(f"{path}: {len(css):,} of 50,000 characters")
+              if len(css) > 50_000:
+                  print(f"::error file={path}::Theme CSS is {len(css):,} characters; T3 accepts at most 50,000")
+                  bad = True
+          sys.exit(1 if bad else 0)
+          PY
