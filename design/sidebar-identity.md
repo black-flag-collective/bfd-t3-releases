@@ -12,3 +12,5 @@ Section order: Needs Keith / Needs action, Updates, Working, Automations, Open t
 Finished work uses `UPDATE: <result>`; `READ:` has no special styling. Scheduled jobs use
 `AUTOMATION: <plain name>` and settle after each run. Automation rows stay compact and
 use a muted dot; Failed and Limited turn red without moving out of Automations.
+
+The top band groups stories by client. On desktop the current mark and short name stay at the left and the next client appears at the right. Selecting a story uses its mounted native thread row. Personal headlines are composed on each T3 server. The shared theme only contains presentation and a board-count fallback. Update and Working cards use the same two-line layout.

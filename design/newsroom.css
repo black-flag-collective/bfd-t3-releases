@@ -1,0 +1,151 @@
+/* Keep the native action buttons, labels and focus order. Ordinary schedules keep their controls. */
+aside[data-thread-details-panel] [data-thread-automations-panel]:has(button[aria-label^="Run "][aria-label*="% · "]) {
+  & li:has(>button[aria-label^="Run "][aria-label*="% · "]) {
+    position: relative; padding: 10px 4px !important; gap: 6px; align-items: start;
+    & > div { flex: 1; min-width: 0 }
+    & > div > span { white-space: normal !important; line-height: 1.4; overflow: visible !important }
+    & > p, & p, & > span:first-child, & > [role="switch"] { display: none !important }
+    & > button[aria-label^="Edit "] { opacity: 0; width: 0; overflow: hidden }
+    &:is(:hover,:focus-within) > button[aria-label^="Edit "] { opacity: 1; width: auto }
+    & > button[aria-label^="Run "] { position: static }
+    & > button[aria-label^="Run "]::after { content: ""; position: absolute; inset: 0; cursor: pointer }
+    & > button[aria-label^="Edit "] { position: relative; z-index: 1 }
+  }
+  &:not(:has(li:not(:has(>button[aria-label^="Run "][aria-label*="% · "])))) > :first-child:not(:has(li)) { display: none }
+}
+aside[data-thread-details-panel] [data-slot="scroll-area-viewport"] > div > div:has(> section[data-thread-automations-panel] button[aria-label*="% · "]) {
+  display: flex; flex-direction: column;
+  & > section[data-thread-automations-panel] { order: -1 }
+}
+@property --news-diff { syntax:"<integer>"; inherits:false; initial-value:-1 }
+@media(min-width:900px) {
+  a[aria-label="T3 Code home"] { anchor-name:--news-home }
+  [data-chat-header] { anchor-name:--news-header }
+  [data-slot="sidebar-wrapper"] {
+    --news-start:calc(anchor(--news-home right,180px) + 18px);
+    --news-width:90px;
+    --news-tail:clamp(105px,12vw,170px);
+  }
+  [data-chat-header]::before,[data-chat-header]::after,
+  [data-chat-header] div:has(> nav[aria-label="Thread breadcrumb"])::before {
+    position:fixed; top:anchor(--news-header top,-200px); z-index:45;
+    height:var(--workspace-topbar-height,52px); box-sizing:border-box;
+    line-height:var(--workspace-topbar-height,52px); pointer-events:none;
+    color:var(--bfd-ink); background-color:var(--bfd-paper);
+  }
+  [data-chat-header]::before {
+    content:var(--news-code,"BFD"); left:var(--news-start); width:var(--news-width);
+    background-image:var(--news-mark,var(--bfd-wm)); background-size:22px auto;
+    background-position:8px center; background-repeat:no-repeat; padding-left:38px;
+    border-right:2px solid var(--bfd-gold); font-weight:750; font-size:13px;
+  }
+  [data-chat-header]::after {
+    content:var(--news-next,""); right:0; width:var(--news-tail); padding-inline:15px;
+    font-size:12px; font-weight:650; color:var(--bfd-muted); border-left:1px solid var(--bfd-line);
+  }
+  [data-chat-header] div:has(> nav[aria-label="Thread breadcrumb"])::before {
+    content:var(--news-headline,counter(bfdneeds) " threads need a decision.");
+    left:calc(var(--news-start) + var(--news-width)); right:var(--news-tail);
+    padding-inline:15px; white-space:nowrap; overflow:hidden; font-size:15px; font-weight:550;
+    animation:news-cross 14s linear infinite;
+  }
+  [data-slot="sidebar-wrapper"]:has([data-chat-header]:hover,[data-sidebar-row]:focus-visible),
+  [data-slot="sidebar-wrapper"]:has([data-chat-header]:hover,[data-sidebar-row]:focus-visible)
+    [data-chat-header] div:has(> nav)::before { animation-play-state:paused }
+  [data-slot="sidebar"] [data-slot="scroll-area-viewport"] { mask:none!important }
+  [data-sidebar-row]::after {
+    --news-diff:calc(var(--news-slot,-10) - var(--story-slot,-20));
+    content:""; visibility:if(style(--news-diff:0):visible;else:hidden);
+    position:fixed; z-index:46; top:anchor(--news-header top,-200px);
+    left:calc(var(--news-start) + var(--news-width)); right:var(--news-tail);
+    height:var(--workspace-topbar-height,52px); cursor:pointer; -webkit-app-region:no-drag;
+  }
+  [data-sidebar-row]:not(:hover,:focus-within) button[aria-label="Unpin thread"] { opacity:0 }
+  [data-chat-header] nav[aria-label="Thread breadcrumb"] {
+    position:absolute; top:100%; left:14px; z-index:12; max-width:70%;
+    background:var(--bfd-paper); border-radius:4px;
+  }
+  :root:has(aside[data-thread-details-panel="inline"]) nav[aria-label="Thread breadcrumb"] {
+    position:fixed; top:68px; right:28px; left:auto; width:244px; z-index:30; font-weight:650;
+  }
+  :root:has(aside[data-thread-details-panel="inline"]) nav[aria-label="Thread breadcrumb"] li:not(:last-child) { display:none }
+  aside[data-thread-details-panel="inline"] [data-thread-details-card] { padding-top:36px }
+  [data-chat-header]:has(button:focus-visible)::before,
+  [data-chat-header]:has(button:focus-visible)::after,
+  [data-chat-header]:has(button:focus-visible) div:has(> nav)::before { visibility:hidden }
+}
+@keyframes news-cross {
+  from { text-indent:32% } to { text-indent:calc(-1 * var(--news-length,44ch)) }
+}
+@media(prefers-reduced-motion:reduce) {
+  [data-slot="sidebar-wrapper"], [data-chat-header] div:has(> nav)::before { animation:none!important }
+}
+@media(min-width:900px) {
+  [data-chat-header]::after {
+    z-index:90; text-align:right; background-image:var(--news-next-mark,none);
+    background-size:22px auto; background-repeat:no-repeat; background-position:14px center;
+  }
+  [data-chat-header]::before { background-color:var(--bfd-paper) }
+  [data-chat-header] [aria-label="Thread breadcrumb"] h2,
+  [data-chat-header] [aria-label="Thread breadcrumb"] h2 span {
+    white-space:normal!important; overflow:visible!important; text-overflow:clip!important;
+    font-size:14px; line-height:18px;
+  }
+  :root:has(aside[data-thread-details-panel="inline"]) nav[aria-label="Thread breadcrumb"] li:last-child button {
+    height:auto; white-space:normal; text-align:left;
+  }
+  aside[data-thread-details-panel="inline"] [data-thread-details-card] { padding-top:50px }
+}
+@keyframes news-cross {
+  0% { text-indent:50% } 40%,75% { text-indent:0 } 100% { text-indent:-70ch }
+}
+[data-thread-automations-panel]:has(button[aria-label*="% · "]) ul {
+  display:flex; flex-direction:column;
+}
+[data-thread-automations-panel]:not(:has(li:not(:has(button[aria-label*="% · "])))):has(button[aria-label*="% · "]) :is(h2,h3,h4) { display:none }
+/* Native automation titles carry the integer percentage at the start. */
+li:has(>button[aria-label^="Run 0"]){--tens:0}
+li:has(>button[aria-label*="0% · "]){--units:0}
+li:has(>button[aria-label^="Run 1"]){--tens:1}
+li:has(>button[aria-label*="1% · "]){--units:1}
+li:has(>button[aria-label^="Run 2"]){--tens:2}
+li:has(>button[aria-label*="2% · "]){--units:2}
+li:has(>button[aria-label^="Run 3"]){--tens:3}
+li:has(>button[aria-label*="3% · "]){--units:3}
+li:has(>button[aria-label^="Run 4"]){--tens:4}
+li:has(>button[aria-label*="4% · "]){--units:4}
+li:has(>button[aria-label^="Run 5"]){--tens:5}
+li:has(>button[aria-label*="5% · "]){--units:5}
+li:has(>button[aria-label^="Run 6"]){--tens:6}
+li:has(>button[aria-label*="6% · "]){--units:6}
+li:has(>button[aria-label^="Run 7"]){--tens:7}
+li:has(>button[aria-label*="7% · "]){--units:7}
+li:has(>button[aria-label^="Run 8"]){--tens:8}
+li:has(>button[aria-label*="8% · "]){--units:8}
+li:has(>button[aria-label^="Run 9"]){--tens:9}
+li:has(>button[aria-label*="9% · "]){--units:9}
+li:has(>button[aria-label*="% · "]){order:calc(-10 * var(--tens,0) - var(--units,0))}
+li:has(>button[aria-label^="Run 0% · "]){--tens:0}
+li:has(>button[aria-label^="Run 1% · "]){--tens:0}
+li:has(>button[aria-label^="Run 2% · "]){--tens:0}
+li:has(>button[aria-label^="Run 3% · "]){--tens:0}
+li:has(>button[aria-label^="Run 4% · "]){--tens:0}
+li:has(>button[aria-label^="Run 5% · "]){--tens:0}
+li:has(>button[aria-label^="Run 6% · "]){--tens:0}
+li:has(>button[aria-label^="Run 7% · "]){--tens:0}
+li:has(>button[aria-label^="Run 8% · "]){--tens:0}
+li:has(>button[aria-label^="Run 9% · "]){--tens:0}
+li:has(>button[aria-label^="Run 100% · "]){order:-100}
+@media(min-width:900px) {
+  [data-chat-header]::before {
+    background-image:var(--news-mark,var(--bfd-wm)),linear-gradient(#fff,#fff);
+    background-size:22px auto,26px 18px; background-position:8px center,6px center;
+  }
+  [data-chat-header]::after {
+    color:var(--bfd-ink)!important; font:650 12px/var(--workspace-topbar-height,52px) "Montserrat",sans-serif!important;
+    background-image:var(--news-next-mark,none),linear-gradient(#fff,#fff);
+    background-size:22px auto,var(--news-next-plate,0 0);
+    background-position:12px center,10px center;
+  }
+  [data-thread-automations-panel]:has(li button[aria-label*="% · "]):not(:has(li:not(:has(button[aria-label*="% · "])))) > div:has(+ div ul) { display:none!important }
+}
