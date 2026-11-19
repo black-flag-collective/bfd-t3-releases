@@ -46,19 +46,18 @@
   }
   [data-chat-header]::before {
     content:var(--news-code,"BFD"); left:var(--news-start); width:var(--news-plate-width);
-    background-image:var(--news-mark,var(--bfd-wm)); background-size:22px auto;
-    background-position:8px center; background-repeat:no-repeat; padding-left:38px; white-space:nowrap;
+    background-repeat:no-repeat; padding-left:38px; white-space:nowrap;
     border-right:2px solid var(--bfd-gold); font-weight:750; font-size:13px;
   }
   [data-chat-header]::after {
     content:var(--news-next,""); right:0; width:var(--news-tail); padding-inline:15px;
-    font-size:12px; font-weight:650; color:var(--bfd-muted); border-left:1px solid var(--bfd-line);
+    z-index:90; text-align:right; background-repeat:no-repeat; border-left:1px solid var(--bfd-line);
   }
   [data-chat-header] div:has(> nav[aria-label="Thread breadcrumb"])::before {
     /* The released base resets bfdneeds on body. Earlier sidebar rows increment that counter. */
     content:var(--news-headline,"Threads needing a decision · " counter(bfdneeds));
     left:calc(var(--news-start) + var(--news-plate-width)); right:var(--news-tail);
-    padding-inline:15px; white-space:nowrap; overflow:hidden; font-size:15px; font-weight:550;
+    padding-inline:15px; overflow:hidden; font-size:15px; font-weight:550;
     display:flex; align-items:center; white-space:normal; line-height:1.25;
   }
   [data-slot="sidebar-wrapper"]:has([data-chat-header]:hover,[data-sidebar-row]:focus-visible),
@@ -98,6 +97,10 @@
   [data-slot="sidebar-wrapper"], [data-chat-header] div:has(> nav)::before { animation:none!important }
 }
 @media(max-width:639px) {
+  /* On keyboard entry T3 tries the editor, then the dialog. Tab from the dialog follows the visual ranking. */
+  :root:has([aria-label="Toggle thread details panel"][aria-expanded=true]:focus-visible)
+    [data-thread-details-panel=popover]:has([data-thread-automations-panel] button[aria-label^="Run "][aria-label*="% · "])
+    [aria-label="Open in editor"]:not(:hover) > [data-open-favorite-editor] { interactivity:inert }
   [data-composer-banner-layout="wrap-actions"] [data-slot="composer-banner-content"] .truncate.font-medium {
     align-self:center; white-space:normal; overflow-wrap:anywhere; line-height:1.35;
   }
@@ -120,11 +123,6 @@
   }
 }
 @media(min-width:900px) {
-  [data-chat-header]::after {
-    z-index:90; text-align:right; background-image:var(--news-next-mark,none);
-    background-size:22px auto; background-repeat:no-repeat; background-position:14px center;
-  }
-  [data-chat-header]::before { background-color:var(--bfd-paper) }
   [data-chat-header] [aria-label="Thread breadcrumb"] h2,
   [data-chat-header] [aria-label="Thread breadcrumb"] h2 span {
     white-space:normal!important; overflow:visible!important; text-overflow:clip!important;
