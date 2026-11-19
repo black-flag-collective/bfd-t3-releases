@@ -28,9 +28,9 @@ content hash in `runtime/keeper/theme` under `T3CODE_HOME`.
 
 When a session has forecasts, its thread details show three next likely actions
 ordered by their estimated likelihood. The percentages assume the next request is one of
-the three suggestions. Opening the panel on a phone gives the full session title
-its own line above the suggestions. A linked session can also show which computer
-it came from.
+the three suggestions. On a phone the selected session title wraps below the
+project and controls. It stays visible when you open or close the forecasts.
+A linked session can also show which computer it came from.
 
 ## Why it is called "releases"
 
