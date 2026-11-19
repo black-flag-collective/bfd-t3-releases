@@ -143,6 +143,18 @@ li:has(>button[aria-label^="Run 100% · "]){order:-100}
     background-size:22px auto,var(--news-next-plate,0 0);
     background-position:12px center,10px center;
   }
+
+  /* The square PowerAdvice tile supplies its own violet backing. */
+  @container bfd-newsroom style(--mark-PA) and style(--news-mark:var(--mark-PA)) {
+    [data-chat-header]::before {
+      background-image:var(--news-mark); background-size:26px auto; background-position:6px center;
+    }
+  }
+  @container bfd-newsroom style(--mark-PA) and style(--news-next-mark:var(--mark-PA)) {
+    [data-chat-header]::after {
+      background-image:var(--news-next-mark); background-size:26px auto; background-position:10px center;
+    }
+  }
 }
 @media(min-width:900px) {
   /* A native Electron drag region consumes clicks before DOM hit testing. */
