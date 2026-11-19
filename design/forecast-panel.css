@@ -1,4 +1,4 @@
-/* Before the list loads, T3 tries the editor, then the dialog. Tab from the dialog follows the visible controls. */
+/* During keyboard opening, let T3 focus the dialog before workspace or forecast buttons. */
 @media(max-width:639px) {
   /* The accessible name also keeps the visible label in the same language. */
   [data-chat-header]:has([aria-label="Toggle thread details panel"]) {
@@ -15,7 +15,7 @@
     }
   }
   :root:has([aria-label="Toggle thread details panel"][aria-expanded=true]:focus-visible)
-    [data-thread-details-panel=popover] :not(:hover) > [data-open-favorite-editor] {
+    [data-thread-details-panel=popover] :not(:hover) > button {
     interactivity:inert
   }
 }
