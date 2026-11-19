@@ -161,3 +161,14 @@ li:has(>button[aria-label^="Run 100% · "]){order:-100}
   [data-slot="sidebar-wrapper"]:has([data-sidebar-row]:hover) [data-chat-header] div:has(> nav)::before { animation-play-state:paused }
   [data-chat-header]::after { display:flex; align-items:center; justify-content:center; padding-left:30px; text-indent:0 }
 }
+@keyframes news-in-a { from { transform:translateX(9px);opacity:.45 } to { transform:none;opacity:1 } }
+@keyframes news-in-b { from { transform:translateX(9px);opacity:.45 } to { transform:none;opacity:1 } }
+@media(min-width:900px) and (prefers-reduced-motion:no-preference) {
+  [data-chat-header]::before { animation:var(--news-entry,none) .55s cubic-bezier(.16,1,.3,1) both }
+}
+@media(min-width:900px) {
+  [data-chat-header] div:has(>nav[aria-label="Thread breadcrumb"])::before {
+    background-image:linear-gradient(90deg,var(--bfd-gold) var(--news-chart,0%),var(--bfd-blue) 0);
+    background-position:0 100%; background-size:100% var(--news-chart-h,0px); background-repeat:no-repeat;
+  }
+}
